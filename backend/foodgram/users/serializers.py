@@ -37,6 +37,7 @@ class UserCreateSerializer(serializers.ModelSerializer):
 
 
 class UserReadSerializer(serializers.ModelSerializer):
+    is_subscribed = serializers.SerializerMethodField()
 
     class Meta:
         model = User
@@ -46,12 +47,17 @@ class UserReadSerializer(serializers.ModelSerializer):
             'email',
             'id',
             'username',
+            'is_subscribed',
         )
         read_only_fields = fields
         depth = 1
 
+    def get_is_subscribed(self, obj):
+        return False
+
 
 class MeReadSerializer(serializers.ModelSerializer):
+    is_subscribed = serializers.SerializerMethodField()
 
     class Meta:
         model = Me
@@ -61,12 +67,12 @@ class MeReadSerializer(serializers.ModelSerializer):
             'email',
             'id',
             'username',
+            'is_subscribed',
         )
         read_only_fields = fields
         depth = 1
 
-        # def to_representation(self, instance):
-        #     obj = instance
-        #     return obj
+    def get_is_subscribed(self, obj):
+        return False
 
 
