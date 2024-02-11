@@ -4,7 +4,7 @@ from django.core.exceptions import ValidationError
 from django.utils import timezone
 from rest_framework.exceptions import ValidationError
 
-from .models import User
+from .models import User, Me
 
 
 class UserCreateSerializer(serializers.ModelSerializer):
@@ -50,5 +50,23 @@ class UserReadSerializer(serializers.ModelSerializer):
         read_only_fields = fields
         depth = 1
 
+
+class MeReadSerializer(serializers.ModelSerializer):
+
+    class Meta:
+        model = Me
+        fields = (
+            'first_name',
+            'last_name',
+            'email',
+            'id',
+            'username',
+        )
+        read_only_fields = fields
+        depth = 1
+
+        # def to_representation(self, instance):
+        #     obj = instance
+        #     return obj
 
 

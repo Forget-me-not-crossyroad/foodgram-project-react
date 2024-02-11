@@ -59,5 +59,17 @@ class User(AbstractBaseUser, PermissionsMixin):
     USERNAME_FIELD = 'email'
     REQUIRED_FIELDS = ['username', 'password', 'first_name', 'last_name']
 
+    # def me(self):
+    #
+
     def __str__(self):
         return self.email
+
+
+class Me(User):
+
+    def save(self, force_insert=False, force_update=False, using=None, update_fields=None):
+        pass
+
+    class Meta:
+        proxy = True
