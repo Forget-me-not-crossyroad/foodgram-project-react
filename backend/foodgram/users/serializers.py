@@ -5,6 +5,8 @@ from django.utils import timezone
 from rest_framework.exceptions import ValidationError
 from rest_framework.fields import CurrentUserDefault
 
+from recipes.models import Recipe
+from recipes.serializers import RecipeSerializer
 from .models import User, Me, SetPassword, Subscription
 
 
@@ -59,6 +61,19 @@ class UserReadSerializer(serializers.ModelSerializer):
         return False
 
 
+class UserSubscriptionSerializer(UserReadSerializer):
+    recipes = RecipeSerializer(many=True, read_only=True)
+    recipes_count = serializers.SerializerMethodField()
+
+    class Meta(UserReadSerializer.Meta):
+        fields = UserReadSerializer.Meta.fields + ('recipes', 'recipes_count')
+
+    def get_recipes_count(self, obj):
+        if Recipe.objects.filter(author=obj).exists():
+            Recipe.objects.filter(author=obj).count()
+        return 0
+
+
 class MeReadSerializer(serializers.ModelSerializer):
     is_subscribed = serializers.SerializerMethodField()
 
@@ -110,7 +125,7 @@ class SubscriptionSerializer(serializers.ModelSerializer):
         data = super().to_representation(instance)
         data.pop('subscribed_to')
         data.pop('subscriber')
-        serializer = UserReadSerializer(instance.subscriber)
+        serializer = UserSubscriptionSerializer(instance.subscriber)
         return serializer.data
 
     class Meta:
@@ -135,7 +150,7 @@ class SubscriptionsSerializer(serializers.ModelSerializer):
         data = super().to_representation(instance)
         data.pop('subscribed_to')
         data.pop('subscriber')
-        serializer = UserReadSerializer(instance.subscribed_to)
+        serializer = UserSubscriptionSerializer(instance.subscribed_to)
         return serializer.data
 
     class Meta:
