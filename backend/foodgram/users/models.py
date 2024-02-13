@@ -106,3 +106,4 @@ class Subscription(models.Model):
                 name='check_self_subscription',
             ),
         ]
+#
