@@ -119,3 +119,27 @@ class SubscriptionSerializer(serializers.ModelSerializer):
         read_only_fields = fields
         depth = 1
 
+
+class SubscriptionDeleteSerializer(serializers.ModelSerializer):
+
+    class Meta:
+        model = Subscription
+        fields = ('subscriber', 'subscribed_to',)
+        read_only_fields = fields
+        depth = 1
+
+
+class SubscriptionsSerializer(serializers.ModelSerializer):
+
+    def to_representation(self, instance):
+        data = super().to_representation(instance)
+        data.pop('subscribed_to')
+        data.pop('subscriber')
+        serializer = UserReadSerializer(instance.subscribed_to)
+        return serializer.data
+
+    class Meta:
+        model = Subscription
+        fields = ('subscriber', 'subscribed_to',)
+        read_only_fields = fields
+        depth = 1

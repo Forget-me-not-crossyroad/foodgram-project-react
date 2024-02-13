@@ -1,13 +1,14 @@
+from django.core.exceptions import PermissionDenied
 from django.shortcuts import render, get_object_or_404
-from rest_framework import viewsets
-from rest_framework.mixins import CreateModelMixin, RetrieveModelMixin, ListModelMixin
+from rest_framework import viewsets, status
+from rest_framework.mixins import CreateModelMixin, RetrieveModelMixin, ListModelMixin, DestroyModelMixin
 from rest_framework.permissions import AllowAny, IsAuthenticated
 from rest_framework.response import Response
 from rest_framework.viewsets import ReadOnlyModelViewSet, GenericViewSet
 
 from .models import User, Me, SetPassword, Subscription
 from .serializers import UserReadSerializer, UserCreateSerializer, MeReadSerializer, SetPasswordSerializer, \
-    SubscriptionSerializer
+    SubscriptionSerializer, SubscriptionsSerializer, SubscriptionDeleteSerializer
 
 
 class UserViewSet(CreateModelMixin, ReadOnlyModelViewSet):
@@ -49,7 +50,7 @@ class SetPasswordViewSet(CreateModelMixin, GenericViewSet):
     pagination_class = None
 
 
-class SubscriptionViewSet(CreateModelMixin, GenericViewSet):
+class SubscriptionViewSet(CreateModelMixin, DestroyModelMixin, GenericViewSet):
     queryset = Subscription.objects.all()
     serializer_class = SubscriptionSerializer
     permission_classes = (IsAuthenticated,)
@@ -59,6 +60,32 @@ class SubscriptionViewSet(CreateModelMixin, GenericViewSet):
     def get_queryset(self):
         return self.request.user.subscriber.all()
 
+    def get_serializer_class(self):
+        if self.action in ('delete',):
+            serializer_class = SubscriptionDeleteSerializer
+        else:
+            serializer_class = SubscriptionSerializer
+        return serializer_class
+
     def perform_create(self, serializer):
         subscribed_to = get_object_or_404(User, id=self.kwargs.get("user_id"))
         serializer.save(subscriber=self.request.user, subscribed_to=subscribed_to)
+
+
+    def delete(self, request, *args, **kwargs):
+        subscribed_to = get_object_or_404(User, id=self.kwargs.get("user_id"))
+        subscription = get_object_or_404(Subscription, subscriber=self.request.user, subscribed_to=subscribed_to)
+        subscription.delete()
+        return Response(status=status.HTTP_204_NO_CONTENT)
+
+
+class SubscriptionsViewSet(ReadOnlyModelViewSet):
+    queryset = Subscription.objects.all()
+    serializer_class = SubscriptionsSerializer
+    permission_classes = (IsAuthenticated,)
+    throttle_scope = None
+    # pagination_class = None
+
+    def get_queryset(self):
+        subscriber = self.request.user
+        return Subscription.objects.filter(subscriber=subscriber)
