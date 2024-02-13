@@ -1,12 +1,13 @@
-from django.shortcuts import render
+from django.shortcuts import render, get_object_or_404
 from rest_framework import viewsets
 from rest_framework.mixins import CreateModelMixin, RetrieveModelMixin, ListModelMixin
 from rest_framework.permissions import AllowAny, IsAuthenticated
 from rest_framework.response import Response
 from rest_framework.viewsets import ReadOnlyModelViewSet, GenericViewSet
 
-from .models import User, Me
-from .serializers import UserReadSerializer, UserCreateSerializer, MeReadSerializer
+from .models import User, Me, SetPassword, Subscription
+from .serializers import UserReadSerializer, UserCreateSerializer, MeReadSerializer, SetPasswordSerializer, \
+    SubscriptionSerializer
 
 
 class UserViewSet(CreateModelMixin, ReadOnlyModelViewSet):
@@ -39,8 +40,25 @@ class MeViewSet(ListModelMixin, GenericViewSet):
         serializer = MeReadSerializer(self.get_queryset(), many=True)
         return Response(serializer.data[0])
 
-# class SetPasswordViewSet(RetrieveModelMixin):
-#     queryset = SetPassword.objects.all()
-#     serializer_class = UserCreateSerializer
-#     permission_classes = (AllowAny,)
-#     throttle_scope = None
+
+class SetPasswordViewSet(CreateModelMixin, GenericViewSet):
+    queryset = SetPassword.objects.all()
+    serializer_class = SetPasswordSerializer
+    permission_classes = (IsAuthenticated,)
+    throttle_scope = None
+    pagination_class = None
+
+
+class SubscriptionViewSet(CreateModelMixin, GenericViewSet):
+    queryset = Subscription.objects.all()
+    serializer_class = SubscriptionSerializer
+    permission_classes = (IsAuthenticated,)
+    throttle_scope = None
+    pagination_class = None
+
+    def get_queryset(self):
+        return self.request.user.subscriber.all()
+
+    def perform_create(self, serializer):
+        subscribed_to = get_object_or_404(User, id=self.kwargs.get("user_id"))
+        serializer.save(subscriber=self.request.user, subscribed_to=subscribed_to)

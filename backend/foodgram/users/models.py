@@ -1,5 +1,8 @@
+from django.contrib.auth import authenticate
 from django.contrib.auth.base_user import BaseUserManager, AbstractBaseUser
+from django.contrib.auth.hashers import make_password
 from django.contrib.auth.models import PermissionsMixin
+from django.core.exceptions import ValidationError
 from django.db import models
 
 
@@ -59,8 +62,12 @@ class User(AbstractBaseUser, PermissionsMixin):
     USERNAME_FIELD = 'email'
     REQUIRED_FIELDS = ['username', 'password', 'first_name', 'last_name']
 
-    # def me(self):
-    #
+    def set_new_password(self, current_password, new_password):
+        if self.check_password(current_password):
+            self.set_password(new_password)
+            self.save()
+        else:
+            raise ValidationError('inserted_old_password_doesnt_match_old_password')
 
     def __str__(self):
         return self.email
@@ -73,3 +80,29 @@ class Me(User):
 
     class Meta:
         proxy = True
+
+
+class SetPassword(models.Model):
+    created = models.DateTimeField(auto_now_add=True)
+    user = models.ForeignKey('users.User', on_delete=models.CASCADE)
+    current_password = models.CharField(max_length=150)
+    new_password = models.CharField(max_length=150)
+
+    def save(self, force_insert=False, force_update=False, using=None, update_fields=None):
+        self.user.set_new_password(self.current_password, self.new_password)
+
+
+class Subscription(models.Model):
+    subscribed_to = models.ForeignKey('users.User', on_delete=models.CASCADE, related_name='subscribed_to')
+    subscriber = models.ForeignKey('users.User', on_delete=models.CASCADE, related_name='subscriber')
+
+    class Meta:
+        constraints = [
+            models.UniqueConstraint(
+                fields=['subscribed_to', 'subscriber'], name='unique_subscription'
+            ),
+            models.CheckConstraint(
+                check=~models.Q(subscribed_to=models.F('subscriber')),
+                name='check_self_subscription',
+            ),
+        ]
