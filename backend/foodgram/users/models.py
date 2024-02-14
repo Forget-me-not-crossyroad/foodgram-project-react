@@ -2,8 +2,10 @@ from django.contrib.auth import authenticate
 from django.contrib.auth.base_user import BaseUserManager, AbstractBaseUser
 from django.contrib.auth.hashers import make_password
 from django.contrib.auth.models import PermissionsMixin
-from django.core.exceptions import ValidationError
+from django.core.exceptions import ValidationError, BadRequest
 from django.db import models
+from rest_framework import status
+from rest_framework.response import Response
 
 
 class UserManager(BaseUserManager):
@@ -67,7 +69,7 @@ class User(AbstractBaseUser, PermissionsMixin):
             self.set_password(new_password)
             self.save()
         else:
-            raise ValidationError('inserted_old_password_doesnt_match_old_password')
+            raise BadRequest('inserted_old_password_doesnt_match_old_password')
 
     def __str__(self):
         return self.email

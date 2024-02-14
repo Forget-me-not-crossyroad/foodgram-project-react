@@ -1,12 +1,15 @@
 import django.core.exceptions
+from django.db import IntegrityError
+from django.http import HttpResponseBadRequest, Http404
 from rest_framework import serializers, status
-from django.core.exceptions import ValidationError
+from django.core.exceptions import ValidationError, BadRequest
 from django.utils import timezone
-from rest_framework.exceptions import ValidationError
+from rest_framework.exceptions import ValidationError, APIException, PermissionDenied
 from rest_framework.fields import CurrentUserDefault
 
 from recipes.models import Recipe
 from recipes.serializers import RecipeSerializer
+from .exceptions import SubscriptionError
 from .models import User, Me, SetPassword, Subscription
 
 
@@ -69,8 +72,8 @@ class UserSubscriptionSerializer(UserReadSerializer):
         fields = UserReadSerializer.Meta.fields + ('recipes', 'recipes_count')
 
     def get_recipes_count(self, obj):
-        if Recipe.objects.filter(author=obj).exists():
-            Recipe.objects.filter(author=obj).count()
+        if Recipe.objects.filter(author=obj.id).exists():
+            return Recipe.objects.filter(author=obj.id).count()
         return 0
 
 
@@ -105,8 +108,8 @@ class SetPasswordSerializer(serializers.ModelSerializer):
     def create(self, validated_data):
         try:
             return super().create(validated_data)
-        except ValidationError as e:
-            raise serializers.ValidationError(e.messages)
+        except BadRequest as e:
+            raise Http404(e)
 
     class Meta:
         model = SetPassword
@@ -127,6 +130,12 @@ class SubscriptionSerializer(serializers.ModelSerializer):
         data.pop('subscriber')
         serializer = UserSubscriptionSerializer(instance.subscriber)
         return serializer.data
+
+    def create(self, validated_data):
+        try:
+            return super().create(validated_data)
+        except IntegrityError:
+            raise SubscriptionError()
 
     class Meta:
         model = Subscription
