@@ -92,12 +92,17 @@ class SubscriptionViewSet(CreateModelMixin, DestroyModelMixin, GenericViewSet):
         serializer.save(subscriber=self.request.user, subscribed_to=subscribed_to)
 
     def delete(self, request, *args, **kwargs):
-        if not Subscription.objects.filter(subscribed_to=self.kwargs.get('user_id')).exists():
+        if not User.objects.filter(id=self.kwargs.get('user_id')).exists():
             return Response(
                 {'errors': 'Объект не найден'},
                 status=status.HTTP_404_NOT_FOUND,
             )
         subscribed_to = get_object_or_404(User, id=self.kwargs.get("user_id"))
+        if not Subscription.objects.filter(subscriber=self.request.user, subscribed_to=subscribed_to).exists():
+            return Response(
+                {'errors': ' Ошибка отписки (пользователь не был подписан)'},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
         subscription = get_object_or_404(Subscription, subscriber=self.request.user, subscribed_to=subscribed_to)
         subscription.delete()
         return Response(status=status.HTTP_204_NO_CONTENT)
