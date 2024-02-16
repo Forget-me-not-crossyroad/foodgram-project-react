@@ -8,7 +8,7 @@ from rest_framework.exceptions import ValidationError, APIException, PermissionD
 from rest_framework.fields import CurrentUserDefault
 
 from recipes.models import Recipe
-from recipes.serializers import RecipeSerializer
+from recipes.serializers import RecipeReadSerializer
 from .exceptions import SubscriptionError
 from .models import User, Me, SetPassword, Subscription
 
@@ -65,7 +65,7 @@ class UserReadSerializer(serializers.ModelSerializer):
 
 
 class UserSubscriptionSerializer(UserReadSerializer):
-    recipes = RecipeSerializer(many=True, read_only=True)
+    recipes = RecipeReadSerializer(many=True, read_only=True)
     recipes_count = serializers.SerializerMethodField()
 
     class Meta(UserReadSerializer.Meta):

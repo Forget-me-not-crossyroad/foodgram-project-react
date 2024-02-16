@@ -1,13 +1,14 @@
 from django.shortcuts import render
 from django_filters.rest_framework import DjangoFilterBackend
 from rest_framework import status
-from rest_framework.mixins import ListModelMixin, RetrieveModelMixin
+from rest_framework.filters import SearchFilter, BaseFilterBackend
+from rest_framework.mixins import ListModelMixin, RetrieveModelMixin, CreateModelMixin
 from rest_framework.permissions import AllowAny
 from rest_framework.response import Response
 from rest_framework.viewsets import GenericViewSet
 
 from recipes.models import Tag, Ingredient, Recipe
-from recipes.serializers import TagSerializer, IngredientSerializer, RecipeSerializer
+from recipes.serializers import TagSerializer, IngredientSerializer, RecipeReadSerializer, RecipeCreateSerializer
 
 
 class TagViewSet(ListModelMixin, RetrieveModelMixin, GenericViewSet):
@@ -30,18 +31,26 @@ class TagViewSet(ListModelMixin, RetrieveModelMixin, GenericViewSet):
 
 
 class IngredientViewSet(ListModelMixin, RetrieveModelMixin, GenericViewSet):
+    SearchFilter.search_param = 'name'
     queryset = Ingredient.objects.all()
     serializer_class = IngredientSerializer
     permission_classes = (AllowAny,)
     throttle_scope = None
     pagination_class = None
-    filter_backends = (DjangoFilterBackend,)
-    filterset_fields = ('name',)
+    filter_backends = (SearchFilter,)
+    search_fields = ['name']
 
 
-class RecipeViewSet(ListModelMixin, RetrieveModelMixin, GenericViewSet):
+class RecipeViewSet(CreateModelMixin, ListModelMixin, RetrieveModelMixin, GenericViewSet):
     queryset = Recipe.objects.all()
-    serializer_class = RecipeSerializer
+    serializer_class = RecipeReadSerializer
     permission_classes = (AllowAny,)
     throttle_scope = None
-    pagination_class = None
+    # pagination_class = None
+
+    def get_serializer_class(self):
+        if self.action in ('list', 'retrieve'):
+            serializer_class = RecipeReadSerializer
+        else:
+            serializer_class = RecipeCreateSerializer
+        return serializer_class
