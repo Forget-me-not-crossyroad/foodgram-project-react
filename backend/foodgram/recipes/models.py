@@ -91,4 +91,15 @@ class IngredientRecipe(models.Model):
     amount = models.ForeignKey('IngredientAmountRecipe', on_delete=models.CASCADE, related_name='RecipeIngredients')
 
 
+class Favorite(models.Model):
+    favorited_user = models.ForeignKey('users.User', on_delete=models.CASCADE, related_name='favorited_user')
+    favorited_recipe = models.ForeignKey('Recipe', on_delete=models.CASCADE, related_name='favorited_recipe')
+
+    class Meta:
+        constraints = [
+            models.UniqueConstraint(
+                fields=['favorited_user', 'favorited_recipe'], name='unique_favorited'
+            ),
+        ]
+
 

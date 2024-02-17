@@ -1,14 +1,15 @@
-from django.shortcuts import render
+from django.shortcuts import render, get_object_or_404
 from django_filters.rest_framework import DjangoFilterBackend
 from rest_framework import status
 from rest_framework.filters import SearchFilter, BaseFilterBackend
-from rest_framework.mixins import ListModelMixin, RetrieveModelMixin, CreateModelMixin
-from rest_framework.permissions import AllowAny
+from rest_framework.mixins import ListModelMixin, RetrieveModelMixin, CreateModelMixin, DestroyModelMixin
+from rest_framework.permissions import AllowAny, IsAuthenticated
 from rest_framework.response import Response
 from rest_framework.viewsets import GenericViewSet
 
-from recipes.models import Tag, Ingredient, Recipe
-from recipes.serializers import TagSerializer, IngredientSerializer, RecipeReadSerializer, RecipeCreateSerializer
+from recipes.models import Tag, Ingredient, Recipe, Favorite
+from recipes.serializers import TagSerializer, IngredientSerializer, RecipeReadSerializer, RecipeCreateSerializer, \
+    FavoriteSerializer, FavoriteDeleteSerializer
 
 
 class TagViewSet(ListModelMixin, RetrieveModelMixin, GenericViewSet):
@@ -46,7 +47,6 @@ class RecipeViewSet(CreateModelMixin, ListModelMixin, RetrieveModelMixin, Generi
     serializer_class = RecipeReadSerializer
     permission_classes = (AllowAny,)
     throttle_scope = None
-    # pagination_class = None
 
     def get_serializer_class(self):
         if self.action in ('list', 'retrieve'):
@@ -54,3 +54,41 @@ class RecipeViewSet(CreateModelMixin, ListModelMixin, RetrieveModelMixin, Generi
         else:
             serializer_class = RecipeCreateSerializer
         return serializer_class
+
+
+class FavoriteViewSet(CreateModelMixin, DestroyModelMixin, GenericViewSet):
+    queryset = Favorite.objects.all()
+    serializer_class = FavoriteSerializer
+    permission_classes = (IsAuthenticated,)
+    throttle_scope = None
+    pagination_class = None
+
+    def get_queryset(self):
+        return self.request.user.subscriber.all()
+
+    def get_serializer_class(self):
+        if self.action in ('delete',):
+            serializer_class = FavoriteDeleteSerializer
+        else:
+            serializer_class = FavoriteSerializer
+        return serializer_class
+
+    def perform_create(self, serializer):
+        favorited_recipe = get_object_or_404(Recipe, id=self.kwargs.get("recipe_id"))
+        serializer.save(favorited_user=self.request.user, favorited_recipe=favorited_recipe)
+
+    def delete(self, request, *args, **kwargs):
+        if not Recipe.objects.filter(id=self.kwargs.get('recipe_id')).exists():
+            return Response(
+                {'errors': 'Объект не найден'},
+                status=status.HTTP_404_NOT_FOUND,
+            )
+        favorited_recipe = get_object_or_404(Recipe, id=self.kwargs.get("recipe_id"))
+        if not Favorite.objects.filter(favorited_user=self.request.user, favorited_recipe=favorited_recipe).exists():
+            return Response(
+                {'errors': 'Ошибка удаления из избранного (рецепт не был в избранном)'},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+        favorited = get_object_or_404(Favorite, favorited_user=self.request.user, favorited_recipe=favorited_recipe)
+        favorited.delete()
+        return Response({'success': 'Рецепт успешно удален из избранного.'}, status=status.HTTP_204_NO_CONTENT)

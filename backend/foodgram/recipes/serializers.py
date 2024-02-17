@@ -3,7 +3,9 @@ from rest_framework import serializers
 from rest_framework.fields import CurrentUserDefault
 from rest_framework.relations import PrimaryKeyRelatedField
 
-from recipes.models import Recipe, Tag, Ingredient, IngredientRecipe, IngredientAmountRecipe
+from recipes.models import Recipe, Tag, Ingredient, IngredientRecipe, IngredientAmountRecipe, Favorite
+
+
 # from users.serializers import UserReadSerializer
 
 
@@ -101,3 +103,47 @@ class RecipeCreateSerializer(serializers.ModelSerializer):
             IngredientRecipe.objects.create(recipe=recipe, amount=ingredient_amount_recipe, ingredient=ingredient_for_recipe)
         recipe.tags.set(tags)
         return recipe
+
+
+class FavoriteSerializer(serializers.ModelSerializer):
+    favorited_user = serializers.HiddenField(default=CurrentUserDefault())
+    name = serializers.SerializerMethodField()
+    cooking_time = serializers.SerializerMethodField()
+    image = serializers.SerializerMethodField()
+
+    def to_representation(self, instance):
+        data = super().to_representation(instance)
+        data.pop('favorited_recipe')
+        return data
+
+    class Meta:
+        model = Favorite
+        fields = ('id', 'favorited_user', 'favorited_recipe', 'name', 'image', 'cooking_time')
+        read_only_fields = fields
+        depth = 1
+
+    def get_name(self, obj):
+        if Recipe.objects.get(id=obj.favorited_recipe.id):
+            return Recipe.objects.get(id=obj.favorited_recipe.id).name
+        return None
+
+    def get_cooking_time(self, obj):
+        if Recipe.objects.get(id=obj.favorited_recipe.id):
+            return Recipe.objects.get(id=obj.favorited_recipe.id).cooking_time
+        return None
+
+    def get_image(self, obj):
+        request = self.context.get('request')
+        if Recipe.objects.get(id=obj.favorited_recipe.id):
+            photo_url = Recipe.objects.get(id=obj.favorited_recipe.id).image.url
+            return request.build_absolute_uri(photo_url)
+        return None
+
+
+class FavoriteDeleteSerializer(serializers.ModelSerializer):
+
+    class Meta:
+        model = Favorite
+        fields = ('favorited_user', 'favorited_recipe',)
+        read_only_fields = fields
+        depth = 1
