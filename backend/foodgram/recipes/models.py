@@ -68,10 +68,27 @@ class Recipe(models.Model):
         return self.name
 
 
+@deconstructible
+class IngredientAmountRecipe(models.Model):
+    amount = models.CharField(max_length=150, default=1)
+
+    @classmethod
+    def get_default_amount(cls):
+        obj, created = cls.objects.get_or_create(
+            amount=1
+        )
+        return obj
+
+    def __str__(self):
+        return self.amount
+
+
 class IngredientRecipe(models.Model):
     ingredient = models.ForeignKey(
         Ingredient, related_name='RecipeIngredients', on_delete=models.CASCADE,
     )
     recipe = models.ForeignKey(Recipe, on_delete=models.CASCADE, related_name='RecipeIngredients',)
+    amount = models.ForeignKey('IngredientAmountRecipe', on_delete=models.CASCADE, related_name='RecipeIngredients')
+
 
 
