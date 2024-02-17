@@ -3,7 +3,7 @@ from rest_framework import serializers
 from rest_framework.fields import CurrentUserDefault
 from rest_framework.relations import PrimaryKeyRelatedField
 
-from recipes.models import Recipe, Tag, Ingredient, IngredientRecipe, IngredientAmountRecipe, Favorite
+from recipes.models import Recipe, Tag, Ingredient, IngredientRecipe, IngredientAmountRecipe, Favorite, ShoppingCart
 
 
 # from users.serializers import UserReadSerializer
@@ -145,5 +145,49 @@ class FavoriteDeleteSerializer(serializers.ModelSerializer):
     class Meta:
         model = Favorite
         fields = ('favorited_user', 'favorited_recipe',)
+        read_only_fields = fields
+        depth = 1
+
+
+class ShoppingCartSerializer(serializers.ModelSerializer):
+    shoppingcart_user = serializers.HiddenField(default=CurrentUserDefault())
+    name = serializers.SerializerMethodField()
+    cooking_time = serializers.SerializerMethodField()
+    image = serializers.SerializerMethodField()
+
+    def to_representation(self, instance):
+        data = super().to_representation(instance)
+        data.pop('shoppingcart_recipe')
+        return data
+
+    class Meta:
+        model = ShoppingCart
+        fields = ('id', 'shoppingcart_user', 'shoppingcart_recipe', 'name', 'image', 'cooking_time')
+        read_only_fields = fields
+        depth = 1
+
+    def get_name(self, obj):
+        if Recipe.objects.get(id=obj.shoppingcart_recipe.id):
+            return Recipe.objects.get(id=obj.shoppingcart_recipe.id).name
+        return None
+
+    def get_cooking_time(self, obj):
+        if Recipe.objects.get(id=obj.shoppingcart_recipe.id):
+            return Recipe.objects.get(id=obj.shoppingcart_recipe.id).cooking_time
+        return None
+
+    def get_image(self, obj):
+        request = self.context.get('request')
+        if Recipe.objects.get(id=obj.shoppingcart_recipe.id):
+            photo_url = Recipe.objects.get(id=obj.shoppingcart_recipe.id).image.url
+            return request.build_absolute_uri(photo_url)
+        return None
+
+
+class ShoppingCartDeleteSerializer(serializers.ModelSerializer):
+
+    class Meta:
+        model = ShoppingCart
+        fields = ('shoppingcart_user', 'shoppingcart_recipe',)
         read_only_fields = fields
         depth = 1

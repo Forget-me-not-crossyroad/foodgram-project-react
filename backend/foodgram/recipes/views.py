@@ -7,9 +7,9 @@ from rest_framework.permissions import AllowAny, IsAuthenticated
 from rest_framework.response import Response
 from rest_framework.viewsets import GenericViewSet
 
-from recipes.models import Tag, Ingredient, Recipe, Favorite
+from recipes.models import Tag, Ingredient, Recipe, Favorite, ShoppingCart
 from recipes.serializers import TagSerializer, IngredientSerializer, RecipeReadSerializer, RecipeCreateSerializer, \
-    FavoriteSerializer, FavoriteDeleteSerializer
+    FavoriteSerializer, FavoriteDeleteSerializer, ShoppingCartSerializer, ShoppingCartDeleteSerializer
 
 
 class TagViewSet(ListModelMixin, RetrieveModelMixin, GenericViewSet):
@@ -64,7 +64,7 @@ class FavoriteViewSet(CreateModelMixin, DestroyModelMixin, GenericViewSet):
     pagination_class = None
 
     def get_queryset(self):
-        return self.request.user.subscriber.all()
+        return self.request.user.favorited_user.all()
 
     def get_serializer_class(self):
         if self.action in ('delete',):
@@ -92,3 +92,41 @@ class FavoriteViewSet(CreateModelMixin, DestroyModelMixin, GenericViewSet):
         favorited = get_object_or_404(Favorite, favorited_user=self.request.user, favorited_recipe=favorited_recipe)
         favorited.delete()
         return Response({'success': 'Рецепт успешно удален из избранного.'}, status=status.HTTP_204_NO_CONTENT)
+
+
+class ShoppingCartViewSet(CreateModelMixin, DestroyModelMixin, GenericViewSet):
+    queryset = ShoppingCart.objects.all()
+    serializer_class = ShoppingCartSerializer
+    permission_classes = (IsAuthenticated,)
+    throttle_scope = None
+    pagination_class = None
+
+    def get_queryset(self):
+        return self.request.user.shoppingcart_user.all()
+
+    def get_serializer_class(self):
+        if self.action in ('delete',):
+            serializer_class = ShoppingCartDeleteSerializer
+        else:
+            serializer_class = ShoppingCartSerializer
+        return serializer_class
+
+    def perform_create(self, serializer):
+        shoppingcart_recipe = get_object_or_404(Recipe, id=self.kwargs.get("recipe_id"))
+        serializer.save(shoppingcart_user=self.request.user, shoppingcart_recipe=shoppingcart_recipe)
+
+    def delete(self, request, *args, **kwargs):
+        if not Recipe.objects.filter(id=self.kwargs.get('recipe_id')).exists():
+            return Response(
+                {'errors': 'Объект не найден'},
+                status=status.HTTP_404_NOT_FOUND,
+            )
+        shoppingcart_recipe = get_object_or_404(Recipe, id=self.kwargs.get("recipe_id"))
+        if not ShoppingCart.objects.filter(shoppingcart_user=self.request.user, shoppingcart_recipe=shoppingcart_recipe).exists():
+            return Response(
+                {'errors': 'Ошибка удаления из корзины (рецепт не был в корзине)'},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+        shoppingcart = get_object_or_404(ShoppingCart, shoppingcart_user=self.request.user, shoppingcart_recipe=shoppingcart_recipe)
+        shoppingcart.delete()
+        return Response({'success': 'Рецепт успешно удален из корзины.'}, status=status.HTTP_204_NO_CONTENT)

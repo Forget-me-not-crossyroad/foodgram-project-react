@@ -103,3 +103,13 @@ class Favorite(models.Model):
         ]
 
 
+class ShoppingCart(models.Model):
+    shoppingcart_user = models.ForeignKey('users.User', on_delete=models.CASCADE, related_name='shoppingcart_user')
+    shoppingcart_recipe = models.ForeignKey('Recipe', on_delete=models.CASCADE, related_name='shoppingcart_recipe')
+
+    class Meta:
+        constraints = [
+            models.UniqueConstraint(
+                fields=['shoppingcart_user', 'shoppingcart_recipe'], name='unique_shoppingcart'
+            ),
+        ]
