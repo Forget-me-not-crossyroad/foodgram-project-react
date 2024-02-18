@@ -3,7 +3,8 @@ from rest_framework import serializers
 from rest_framework.fields import CurrentUserDefault
 from rest_framework.relations import PrimaryKeyRelatedField
 
-from recipes.models import Recipe, Tag, Ingredient, IngredientRecipe, IngredientAmountRecipe, Favorite, ShoppingCart
+from recipes.models import (Favorite, Ingredient, IngredientAmountRecipe,
+                            IngredientRecipe, Recipe, ShoppingCart, Tag)
 
 
 class TagSerializer(serializers.ModelSerializer):
@@ -17,7 +18,11 @@ class IngredientSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Ingredient
-        fields = ('id', 'name', 'measurement_unit',)
+        fields = (
+            'id',
+            'name',
+            'measurement_unit',
+        )
 
 
 class IngredientAmountRecipeSerializer(serializers.ModelSerializer):
@@ -26,13 +31,18 @@ class IngredientAmountRecipeSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = IngredientAmountRecipe
-        fields = ('id', 'amount',)
+        fields = (
+            'id',
+            'amount',
+        )
 
 
 class IngredientRecipeSerializer(serializers.ModelSerializer):
     id = serializers.ReadOnlyField(source='ingredient.id')
     name = serializers.CharField(source='ingredient.name')
-    measurement_unit = serializers.CharField(source='ingredient.measurement_unit')
+    measurement_unit = serializers.CharField(
+        source='ingredient.measurement_unit'
+    )
     amount = serializers.IntegerField(source='amount.amount')
 
     class Meta:
@@ -48,13 +58,26 @@ class RecipeReadSerializer(serializers.ModelSerializer):
 
     def to_representation(self, instance):
         ingredients = super().to_representation(instance)
-        ingredients['ingredients'] = IngredientRecipeSerializer(IngredientRecipe.objects.filter(recipe=instance), many=True).data
+        ingredients['ingredients'] = IngredientRecipeSerializer(
+            IngredientRecipe.objects.filter(recipe=instance), many=True
+        ).data
         return ingredients
 
     class Meta:
         model = Recipe
-        fields = ('id', 'name', 'author', 'text', 'image', 'created', 'cooking_time', 'ingredients', 'tags',
-                  'is_favorited', 'is_in_shopping_cart',)
+        fields = (
+            'id',
+            'name',
+            'author',
+            'text',
+            'image',
+            'created',
+            'cooking_time',
+            'ingredients',
+            'tags',
+            'is_favorited',
+            'is_in_shopping_cart',
+        )
         depth = 1
 
     def get_is_favorited(self, obj):
@@ -77,8 +100,19 @@ class RecipeCreateSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Recipe
-        fields = ('id', 'name', 'author', 'text', 'image', 'created', 'cooking_time', 'ingredients', 'tags',
-                  'is_favorited', 'is_in_shopping_cart',)
+        fields = (
+            'id',
+            'name',
+            'author',
+            'text',
+            'image',
+            'created',
+            'cooking_time',
+            'ingredients',
+            'tags',
+            'is_favorited',
+            'is_in_shopping_cart',
+        )
         depth = 1
 
     def get_is_favorited(self, obj):
@@ -102,9 +136,17 @@ class RecipeCreateSerializer(serializers.ModelSerializer):
         for ingredient in ingredients:
             ingredient_for_recipe_id = ingredient['id']
             amount_for_recipe = ingredient['amount']
-            ingredient_for_recipe = Ingredient.objects.get(id=ingredient_for_recipe_id)
-            ingredient_amount_recipe = IngredientAmountRecipe.objects.create(amount=amount_for_recipe)
-            IngredientRecipe.objects.create(recipe=recipe, amount=ingredient_amount_recipe, ingredient=ingredient_for_recipe)
+            ingredient_for_recipe = Ingredient.objects.get(
+                id=ingredient_for_recipe_id
+            )
+            ingredient_amount_recipe = IngredientAmountRecipe.objects.create(
+                amount=amount_for_recipe
+            )
+            IngredientRecipe.objects.create(
+                recipe=recipe,
+                amount=ingredient_amount_recipe,
+                ingredient=ingredient_for_recipe,
+            )
         recipe.tags.set(tags)
         return recipe
 
@@ -116,10 +158,17 @@ class RecipeCreateSerializer(serializers.ModelSerializer):
         for ingredient in ingredients:
             ingredient_for_recipe_id = ingredient['id']
             amount_for_recipe = ingredient['amount']
-            ingredient_for_recipe = Ingredient.objects.get(id=ingredient_for_recipe_id)
-            ingredient_amount_recipe = IngredientAmountRecipe.objects.create(amount=amount_for_recipe)
-            IngredientRecipe.objects.create(recipe=recipe, amount=ingredient_amount_recipe,
-                                            ingredient=ingredient_for_recipe)
+            ingredient_for_recipe = Ingredient.objects.get(
+                id=ingredient_for_recipe_id
+            )
+            ingredient_amount_recipe = IngredientAmountRecipe.objects.create(
+                amount=amount_for_recipe
+            )
+            IngredientRecipe.objects.create(
+                recipe=recipe,
+                amount=ingredient_amount_recipe,
+                ingredient=ingredient_for_recipe,
+            )
         instance.tags.set(tags)
         return super().update(instance, validated_data)
 
@@ -137,7 +186,14 @@ class FavoriteSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Favorite
-        fields = ('id', 'favorited_user', 'favorited_recipe', 'name', 'image', 'cooking_time')
+        fields = (
+            'id',
+            'favorited_user',
+            'favorited_recipe',
+            'name',
+            'image',
+            'cooking_time',
+        )
         read_only_fields = fields
         depth = 1
 
@@ -154,7 +210,9 @@ class FavoriteSerializer(serializers.ModelSerializer):
     def get_image(self, obj):
         request = self.context.get('request')
         if Recipe.objects.get(id=obj.favorited_recipe.id):
-            photo_url = Recipe.objects.get(id=obj.favorited_recipe.id).image.url
+            photo_url = Recipe.objects.get(
+                id=obj.favorited_recipe.id
+            ).image.url
             return request.build_absolute_uri(photo_url)
         return None
 
@@ -163,7 +221,10 @@ class FavoriteDeleteSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Favorite
-        fields = ('favorited_user', 'favorited_recipe',)
+        fields = (
+            'favorited_user',
+            'favorited_recipe',
+        )
         read_only_fields = fields
         depth = 1
 
@@ -181,7 +242,14 @@ class ShoppingCartSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = ShoppingCart
-        fields = ('id', 'shoppingcart_user', 'shoppingcart_recipe', 'name', 'image', 'cooking_time')
+        fields = (
+            'id',
+            'shoppingcart_user',
+            'shoppingcart_recipe',
+            'name',
+            'image',
+            'cooking_time',
+        )
         read_only_fields = fields
         depth = 1
 
@@ -192,13 +260,17 @@ class ShoppingCartSerializer(serializers.ModelSerializer):
 
     def get_cooking_time(self, obj):
         if Recipe.objects.get(id=obj.shoppingcart_recipe.id):
-            return Recipe.objects.get(id=obj.shoppingcart_recipe.id).cooking_time
+            return Recipe.objects.get(
+                id=obj.shoppingcart_recipe.id
+            ).cooking_time
         return None
 
     def get_image(self, obj):
         request = self.context.get('request')
         if Recipe.objects.get(id=obj.shoppingcart_recipe.id):
-            photo_url = Recipe.objects.get(id=obj.shoppingcart_recipe.id).image.url
+            photo_url = Recipe.objects.get(
+                id=obj.shoppingcart_recipe.id
+            ).image.url
             return request.build_absolute_uri(photo_url)
         return None
 
@@ -207,6 +279,9 @@ class ShoppingCartDeleteSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = ShoppingCart
-        fields = ('shoppingcart_user', 'shoppingcart_recipe',)
+        fields = (
+            'shoppingcart_user',
+            'shoppingcart_recipe',
+        )
         read_only_fields = fields
         depth = 1

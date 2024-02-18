@@ -1,11 +1,7 @@
-from django.contrib.auth import authenticate
-from django.contrib.auth.base_user import BaseUserManager, AbstractBaseUser
-from django.contrib.auth.hashers import make_password
+from django.contrib.auth.base_user import AbstractBaseUser, BaseUserManager
 from django.contrib.auth.models import PermissionsMixin
-from django.core.exceptions import ValidationError, BadRequest
+from django.core.exceptions import BadRequest
 from django.db import models
-from rest_framework import status
-from rest_framework.response import Response
 
 
 class UserManager(BaseUserManager):
@@ -16,10 +12,7 @@ class UserManager(BaseUserManager):
         email = self.normalize_email(email)
         email = email.lower()
 
-        user = self.model(
-            email=email,
-            **kwargs
-        )
+        user = self.model(email=email, **kwargs)
 
         user.set_password(password)
         user.save(using=self._db)
@@ -27,11 +20,7 @@ class UserManager(BaseUserManager):
         return user
 
     def create_superuser(self, email, password=None, **kwargs):
-        user = self.create_user(
-            email,
-            password=password,
-            **kwargs
-        )
+        user = self.create_user(email, password=password, **kwargs)
 
         user.is_staff = True
         user.is_superuser = True
@@ -43,12 +32,8 @@ class UserManager(BaseUserManager):
 class User(AbstractBaseUser, PermissionsMixin):
     USER = 'user'
     ADMIN = 'admin'
-    ROLE_USER = [
-        (USER, 'Пользователь'),
-        (ADMIN, 'Администратор')
-    ]
-    role = models.CharField(max_length=15, choices=ROLE_USER,
-                            default=USER)
+    ROLE_USER = [(USER, 'Пользователь'), (ADMIN, 'Администратор')]
+    role = models.CharField(max_length=15, choices=ROLE_USER, default=USER)
     first_name = models.CharField(max_length=255)
     last_name = models.CharField(max_length=255)
     password = models.CharField(max_length=150)
@@ -77,7 +62,13 @@ class User(AbstractBaseUser, PermissionsMixin):
 
 class Me(User):
 
-    def save(self, force_insert=False, force_update=False, using=None, update_fields=None):
+    def save(
+        self,
+        force_insert=False,
+        force_update=False,
+        using=None,
+        update_fields=None,
+    ):
         pass
 
     class Meta:
@@ -90,22 +81,35 @@ class SetPassword(models.Model):
     current_password = models.CharField(max_length=150)
     new_password = models.CharField(max_length=150)
 
-    def save(self, force_insert=False, force_update=False, using=None, update_fields=None):
+    def save(
+        self,
+        force_insert=False,
+        force_update=False,
+        using=None,
+        update_fields=None,
+    ):
         self.user.set_new_password(self.current_password, self.new_password)
 
 
 class Subscription(models.Model):
-    subscribed_to = models.ForeignKey('users.User', on_delete=models.CASCADE, related_name='subscribed_to')
-    subscriber = models.ForeignKey('users.User', on_delete=models.CASCADE, related_name='subscriber')
+    subscribed_to = models.ForeignKey(
+        'users.User', on_delete=models.CASCADE, related_name='subscribed_to'
+    )
+    subscriber = models.ForeignKey(
+        'users.User', on_delete=models.CASCADE, related_name='subscriber'
+    )
 
     class Meta:
         constraints = [
             models.UniqueConstraint(
-                fields=['subscribed_to', 'subscriber'], name='unique_subscription'
+                fields=['subscribed_to', 'subscriber'],
+                name='unique_subscription',
             ),
             models.CheckConstraint(
                 check=~models.Q(subscribed_to=models.F('subscriber')),
                 name='check_self_subscription',
             ),
         ]
+
+
 #

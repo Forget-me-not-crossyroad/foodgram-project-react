@@ -1,20 +1,21 @@
-import django.core.exceptions
+from django.core.exceptions import BadRequest, ValidationError
 from django.db import IntegrityError
-from django.http import HttpResponseBadRequest, Http404
-from rest_framework import serializers, status
-from django.core.exceptions import ValidationError, BadRequest
+from django.http import Http404
 from django.utils import timezone
-from rest_framework.exceptions import ValidationError, APIException, PermissionDenied
-from rest_framework.fields import CurrentUserDefault
-
 from recipes.models import Recipe
 from recipes.serializers import RecipeReadSerializer
+from rest_framework import serializers
+from rest_framework.exceptions import ValidationError
+from rest_framework.fields import CurrentUserDefault
+
 from .exceptions import SubscriptionError
-from .models import User, Me, SetPassword, Subscription
+from .models import Me, SetPassword, Subscription, User
 
 
 class UserCreateSerializer(serializers.ModelSerializer):
-    password = serializers.CharField(write_only=True, style={'input_type': 'password'})
+    password = serializers.CharField(
+        write_only=True, style={'input_type': 'password'}
+    )
     date_joined = serializers.HiddenField(default=timezone.now)
     is_active = serializers.HiddenField(default=True)
     is_staff = serializers.HiddenField(default=False)
@@ -102,8 +103,12 @@ class MeReadSerializer(serializers.ModelSerializer):
 class SetPasswordSerializer(serializers.ModelSerializer):
     user = serializers.HiddenField(default=CurrentUserDefault())
     created = serializers.HiddenField(default=timezone.now)
-    current_password = serializers.CharField(write_only=True, style={'input_type': 'current_password'})
-    new_password = serializers.CharField(write_only=True, style={'input_type': 'new_password'})
+    current_password = serializers.CharField(
+        write_only=True, style={'input_type': 'current_password'}
+    )
+    new_password = serializers.CharField(
+        write_only=True, style={'input_type': 'new_password'}
+    )
 
     def create(self, validated_data):
         try:
@@ -113,7 +118,12 @@ class SetPasswordSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = SetPassword
-        fields = ('user', 'created', 'current_password', 'new_password',)
+        fields = (
+            'user',
+            'created',
+            'current_password',
+            'new_password',
+        )
         read_only_fields = fields
         depth = 1
 
@@ -139,7 +149,10 @@ class SubscriptionSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Subscription
-        fields = ('subscriber', 'subscribed_to',)
+        fields = (
+            'subscriber',
+            'subscribed_to',
+        )
         read_only_fields = fields
         depth = 1
 
@@ -148,7 +161,10 @@ class SubscriptionDeleteSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Subscription
-        fields = ('subscriber', 'subscribed_to',)
+        fields = (
+            'subscriber',
+            'subscribed_to',
+        )
         read_only_fields = fields
         depth = 1
 
@@ -164,6 +180,9 @@ class SubscriptionsSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Subscription
-        fields = ('subscriber', 'subscribed_to',)
+        fields = (
+            'subscriber',
+            'subscribed_to',
+        )
         read_only_fields = fields
         depth = 1

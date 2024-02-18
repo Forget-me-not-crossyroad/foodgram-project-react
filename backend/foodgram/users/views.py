@@ -1,16 +1,17 @@
-from django.core.exceptions import PermissionDenied
-from django.http import JsonResponse, Http404
-from django.shortcuts import render, get_object_or_404
-from rest_framework import viewsets, status
-from rest_framework.exceptions import ValidationError
-from rest_framework.mixins import CreateModelMixin, RetrieveModelMixin, ListModelMixin, DestroyModelMixin
+from django.http import Http404
+from django.shortcuts import get_object_or_404
+from rest_framework import status
+from rest_framework.mixins import (CreateModelMixin, DestroyModelMixin,
+                                   ListModelMixin)
 from rest_framework.permissions import AllowAny, IsAuthenticated
 from rest_framework.response import Response
-from rest_framework.viewsets import ReadOnlyModelViewSet, GenericViewSet
+from rest_framework.viewsets import GenericViewSet, ReadOnlyModelViewSet
 
-from .models import User, Me, SetPassword, Subscription
-from .serializers import UserReadSerializer, UserCreateSerializer, MeReadSerializer, SetPasswordSerializer, \
-    SubscriptionSerializer, SubscriptionsSerializer, SubscriptionDeleteSerializer
+from .models import Me, SetPassword, Subscription, User
+from .serializers import (MeReadSerializer, SetPasswordSerializer,
+                          SubscriptionDeleteSerializer, SubscriptionSerializer,
+                          SubscriptionsSerializer, UserCreateSerializer,
+                          UserReadSerializer)
 
 
 class UserViewSet(CreateModelMixin, ReadOnlyModelViewSet):
@@ -65,9 +66,15 @@ class SetPasswordViewSet(CreateModelMixin, GenericViewSet):
     def create(self, request, *args, **kwargs):
         try:
             super().create(request, *args, **kwargs)
-            return Response({'success': 'Пароль успешно изменен.'}, status=status.HTTP_204_NO_CONTENT)
+            return Response(
+                {'success': 'Пароль успешно изменен.'},
+                status=status.HTTP_204_NO_CONTENT,
+            )
         except Http404:
-            return Response({'errors': 'Введен неверный существующий пароль.'}, status=status.HTTP_400_BAD_REQUEST)
+            return Response(
+                {'errors': 'Введен неверный существующий пароль.'},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
 
 
 class SubscriptionViewSet(CreateModelMixin, DestroyModelMixin, GenericViewSet):
@@ -89,7 +96,9 @@ class SubscriptionViewSet(CreateModelMixin, DestroyModelMixin, GenericViewSet):
 
     def perform_create(self, serializer):
         subscribed_to = get_object_or_404(User, id=self.kwargs.get("user_id"))
-        serializer.save(subscriber=self.request.user, subscribed_to=subscribed_to)
+        serializer.save(
+            subscriber=self.request.user, subscribed_to=subscribed_to
+        )
 
     def delete(self, request, *args, **kwargs):
         if not User.objects.filter(id=self.kwargs.get('user_id')).exists():
@@ -98,12 +107,18 @@ class SubscriptionViewSet(CreateModelMixin, DestroyModelMixin, GenericViewSet):
                 status=status.HTTP_404_NOT_FOUND,
             )
         subscribed_to = get_object_or_404(User, id=self.kwargs.get("user_id"))
-        if not Subscription.objects.filter(subscriber=self.request.user, subscribed_to=subscribed_to).exists():
+        if not Subscription.objects.filter(
+            subscriber=self.request.user, subscribed_to=subscribed_to
+        ).exists():
             return Response(
                 {'errors': ' Ошибка отписки (пользователь не был подписан)'},
                 status=status.HTTP_400_BAD_REQUEST,
             )
-        subscription = get_object_or_404(Subscription, subscriber=self.request.user, subscribed_to=subscribed_to)
+        subscription = get_object_or_404(
+            Subscription,
+            subscriber=self.request.user,
+            subscribed_to=subscribed_to,
+        )
         subscription.delete()
         return Response(status=status.HTTP_204_NO_CONTENT)
 
