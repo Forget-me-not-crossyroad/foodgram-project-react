@@ -127,7 +127,9 @@ class FavoriteViewSet(CreateModelMixin, DestroyModelMixin, GenericViewSet):
         ).exists():
             return Response(
                 {
-                    'errors': 'Ошибка удаления из избранного (рецепт не был в избранном)'
+                    'errors': 'Ошибка удаления'
+                              ' из избранного (рецепт'
+                              ' не был в избранном)'
                 },
                 status=status.HTTP_400_BAD_REQUEST,
             )
@@ -184,7 +186,10 @@ class ShoppingCartViewSet(CreateModelMixin, DestroyModelMixin, GenericViewSet):
         ).exists():
             return Response(
                 {
-                    'errors': 'Ошибка удаления из корзины (рецепт не был в корзине)'
+                    'errors': 'Ошибка'
+                              ' удаления из'
+                              ' корзины'
+                              ' (рецепт не был в корзине)'
                 },
                 status=status.HTTP_400_BAD_REQUEST,
             )
