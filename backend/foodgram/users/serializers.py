@@ -1,4 +1,4 @@
-from django.core.exceptions import BadRequest, ValidationError
+from django.core.exceptions import BadRequest
 from django.db import IntegrityError
 from django.http import Http404
 from django.utils import timezone

@@ -6,21 +6,36 @@ from reportlab.lib.units import inch
 from reportlab.pdfgen import canvas
 from rest_framework import status
 from rest_framework.filters import SearchFilter
-from rest_framework.mixins import (CreateModelMixin, DestroyModelMixin,
-                                   ListModelMixin, RetrieveModelMixin,
-                                   UpdateModelMixin)
+from rest_framework.mixins import (
+    CreateModelMixin,
+    DestroyModelMixin,
+    ListModelMixin,
+    RetrieveModelMixin,
+    UpdateModelMixin,
+)
 from rest_framework.permissions import AllowAny, IsAuthenticated
 from rest_framework.response import Response
 from rest_framework.views import APIView
 from rest_framework.viewsets import GenericViewSet
 
-from recipes.models import (Favorite, Ingredient, IngredientRecipe, Recipe,
-                            ShoppingCart, Tag)
-from recipes.serializers import (FavoriteDeleteSerializer, FavoriteSerializer,
-                                 IngredientSerializer, RecipeCreateSerializer,
-                                 RecipeReadSerializer,
-                                 ShoppingCartDeleteSerializer,
-                                 ShoppingCartSerializer, TagSerializer)
+from recipes.models import (
+    Favorite,
+    Ingredient,
+    IngredientRecipe,
+    Recipe,
+    ShoppingCart,
+    Tag,
+)
+from recipes.serializers import (
+    FavoriteDeleteSerializer,
+    FavoriteSerializer,
+    IngredientSerializer,
+    RecipeCreateSerializer,
+    RecipeReadSerializer,
+    ShoppingCartDeleteSerializer,
+    ShoppingCartSerializer,
+    TagSerializer,
+)
 
 
 class TagViewSet(ListModelMixin, RetrieveModelMixin, GenericViewSet):
