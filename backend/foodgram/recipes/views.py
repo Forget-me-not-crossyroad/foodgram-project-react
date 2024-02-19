@@ -21,6 +21,7 @@ from rest_framework.views import APIView
 from rest_framework.viewsets import GenericViewSet
 
 from foodgram import settings
+from foodgram.permission import OwnerOrReadOnly
 from recipes.models import (
     Favorite,
     Ingredient,
@@ -81,7 +82,7 @@ class RecipeViewSet(
 ):
     queryset = Recipe.objects.all()
     serializer_class = RecipeReadSerializer
-    permission_classes = (AllowAny,)
+    permission_classes = (OwnerOrReadOnly,)
     throttle_scope = None
 
     def get_serializer_class(self):
