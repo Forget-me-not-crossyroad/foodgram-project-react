@@ -3,6 +3,8 @@ import io
 from django.http import FileResponse
 from django.shortcuts import get_object_or_404
 from reportlab.lib.units import inch
+from reportlab.pdfbase import pdfmetrics
+from reportlab.pdfbase.ttfonts import TTFont
 from reportlab.pdfgen import canvas
 from rest_framework import status
 from rest_framework.filters import SearchFilter
@@ -18,6 +20,7 @@ from rest_framework.response import Response
 from rest_framework.views import APIView
 from rest_framework.viewsets import GenericViewSet
 
+from foodgram import settings
 from recipes.models import (
     Favorite,
     Ingredient,
@@ -243,9 +246,10 @@ class ShoppingCartDownloadView(APIView):
             ).measurement_unit
             string_list.append(f'{name} - {amount} {measurement_unit}')
 
+        pdfmetrics.registerFont(TTFont('FreeSans', str(settings.BASE_DIR) + '/recipes/static/FreeSans.ttf', 'UTF-8'))
         buffer = io.BytesIO()
         p = canvas.Canvas(buffer)
-        p.setFont("Helvetica", 12)
+        p.setFont("FreeSans", 12)
 
         y = 800
         for i in range(0, len(string_list)):
