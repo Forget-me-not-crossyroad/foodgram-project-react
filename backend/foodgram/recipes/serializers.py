@@ -151,25 +151,28 @@ class RecipeCreateSerializer(serializers.ModelSerializer):
         return recipe
 
     def update(self, instance, validated_data):
-        ingredients = validated_data.pop('ingredients')
-        tags = validated_data.pop('tags')
-        instance.ingredients.clear()
-        recipe = Recipe.objects.get(id=instance.id)
-        for ingredient in ingredients:
-            ingredient_for_recipe_id = ingredient['id']
-            amount_for_recipe = ingredient['amount']
-            ingredient_for_recipe = Ingredient.objects.get(
-                id=ingredient_for_recipe_id
-            )
-            ingredient_amount_recipe = IngredientAmountRecipe.objects.create(
-                amount=amount_for_recipe
-            )
-            IngredientRecipe.objects.create(
-                recipe=recipe,
-                amount=ingredient_amount_recipe,
-                ingredient=ingredient_for_recipe,
-            )
-        instance.tags.set(tags)
+        if not self.context['request'].data['ingredients'] is None:
+            context = self.context['request']
+            ingredients = context.data['ingredients']
+            instance.ingredients.clear()
+            for ingredient in ingredients:
+                ingredient_for_recipe_id = ingredient['id']
+                amount_for_recipe = ingredient['amount']
+                ingredient_for_recipe = Ingredient.objects.get(
+                    id=ingredient_for_recipe_id
+                )
+                ingredient_amount_recipe = IngredientAmountRecipe.objects.create(
+                    amount=amount_for_recipe
+                )
+                IngredientRecipe.objects.create(
+                    recipe=instance,
+                    amount=ingredient_amount_recipe,
+                    ingredient=ingredient_for_recipe,
+                )
+        if not validated_data.get('tags') is None:
+            instance.tags.clear()
+            tags = validated_data.pop('tags')
+            instance.tags.set(tags)
         return super().update(instance, validated_data)
 
 

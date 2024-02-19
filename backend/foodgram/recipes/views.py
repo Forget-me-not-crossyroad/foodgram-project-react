@@ -74,6 +74,7 @@ class RecipeViewSet(
     RetrieveModelMixin,
     UpdateModelMixin,
     GenericViewSet,
+    DestroyModelMixin
 ):
     queryset = Recipe.objects.all()
     serializer_class = RecipeReadSerializer
