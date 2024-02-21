@@ -5,6 +5,7 @@ from rest_framework.relations import PrimaryKeyRelatedField
 
 from recipes.models import (Favorite, Ingredient, IngredientAmountRecipe,
                             IngredientRecipe, Recipe, ShoppingCart, Tag)
+from users.models import Subscription, User
 
 
 class TagSerializer(serializers.ModelSerializer):
@@ -50,11 +51,33 @@ class IngredientRecipeSerializer(serializers.ModelSerializer):
         fields = ('id', 'name', 'measurement_unit', 'amount')
 
 
+class UserRecipeReadSerializer(serializers.ModelSerializer):
+    is_subscribed = serializers.SerializerMethodField()
+
+    class Meta:
+        model = User
+        fields = (
+            'first_name',
+            'last_name',
+            'email',
+            'id',
+            'username',
+            'is_subscribed',
+        )
+        read_only_fields = fields
+        depth = 1
+
+    def get_is_subscribed(self, obj):
+        if Subscription.objects.filter(subscribed_to=obj).exists():
+            return True
+        return False
+
 class RecipeReadSerializer(serializers.ModelSerializer):
     tags = TagSerializer(many=True, read_only=True)
     image = Base64ImageField()
     is_favorited = serializers.SerializerMethodField()
     is_in_shopping_cart = serializers.SerializerMethodField()
+    author = UserRecipeReadSerializer(read_only=True)
 
     def to_representation(self, instance):
         ingredients = super().to_representation(instance)

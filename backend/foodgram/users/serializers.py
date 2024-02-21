@@ -60,7 +60,7 @@ class UserReadSerializer(serializers.ModelSerializer):
         depth = 1
 
     def get_is_subscribed(self, obj):
-        if Subscription.objects.filter(subscriber=obj).exists():
+        if Subscription.objects.filter(subscribed_to=obj).exists():
             return True
         return False
 
@@ -95,7 +95,7 @@ class MeReadSerializer(serializers.ModelSerializer):
         depth = 1
 
     def get_is_subscribed(self, obj):
-        if Subscription.objects.filter(subscriber=obj).exists():
+        if Subscription.objects.filter(subscribed_to=obj).exists():
             return True
         return False
 
