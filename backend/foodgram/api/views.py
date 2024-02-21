@@ -2,44 +2,29 @@ import io
 
 from django.http import FileResponse
 from django.shortcuts import get_object_or_404
+from foodgram import settings
+from foodgram.permission import OwnerOrReadOnly
+from recipes.models import (Favorite, Ingredient, IngredientRecipe, Recipe,
+                            ShoppingCart, Tag)
 from reportlab.lib.units import inch
 from reportlab.pdfbase import pdfmetrics
 from reportlab.pdfbase.ttfonts import TTFont
 from reportlab.pdfgen import canvas
 from rest_framework import status
 from rest_framework.filters import SearchFilter
-from rest_framework.mixins import (
-    CreateModelMixin,
-    DestroyModelMixin,
-    ListModelMixin,
-    RetrieveModelMixin,
-    UpdateModelMixin,
-)
+from rest_framework.mixins import (CreateModelMixin, DestroyModelMixin,
+                                   ListModelMixin, RetrieveModelMixin,
+                                   UpdateModelMixin)
 from rest_framework.permissions import AllowAny, IsAuthenticated
 from rest_framework.response import Response
 from rest_framework.views import APIView
 from rest_framework.viewsets import GenericViewSet
 
-from foodgram import settings
-from foodgram.permission import OwnerOrReadOnly
-from recipes.models import (
-    Favorite,
-    Ingredient,
-    IngredientRecipe,
-    Recipe,
-    ShoppingCart,
-    Tag,
-)
-from recipes.serializers import (
-    FavoriteDeleteSerializer,
-    FavoriteSerializer,
-    IngredientSerializer,
-    RecipeCreateSerializer,
-    RecipeReadSerializer,
-    ShoppingCartDeleteSerializer,
-    ShoppingCartSerializer,
-    TagSerializer,
-)
+from api.serializers import (FavoriteDeleteSerializer, FavoriteSerializer,
+                             IngredientSerializer, RecipeCreateSerializer,
+                             RecipeReadSerializer,
+                             ShoppingCartDeleteSerializer,
+                             ShoppingCartSerializer, TagSerializer)
 
 
 class TagViewSet(ListModelMixin, RetrieveModelMixin, GenericViewSet):
@@ -78,7 +63,7 @@ class RecipeViewSet(
     RetrieveModelMixin,
     UpdateModelMixin,
     GenericViewSet,
-    DestroyModelMixin
+    DestroyModelMixin,
 ):
     queryset = Recipe.objects.all()
     serializer_class = RecipeReadSerializer
@@ -133,8 +118,8 @@ class FavoriteViewSet(CreateModelMixin, DestroyModelMixin, GenericViewSet):
             return Response(
                 {
                     'errors': 'Ошибка удаления'
-                              ' из избранного (рецепт'
-                              ' не был в избранном)'
+                    ' из избранного (рецепт'
+                    ' не был в избранном)'
                 },
                 status=status.HTTP_400_BAD_REQUEST,
             )
@@ -192,9 +177,9 @@ class ShoppingCartViewSet(CreateModelMixin, DestroyModelMixin, GenericViewSet):
             return Response(
                 {
                     'errors': 'Ошибка'
-                              ' удаления из'
-                              ' корзины'
-                              ' (рецепт не был в корзине)'
+                    ' удаления из'
+                    ' корзины'
+                    ' (рецепт не был в корзине)'
                 },
                 status=status.HTTP_400_BAD_REQUEST,
             )
@@ -247,7 +232,13 @@ class ShoppingCartDownloadView(APIView):
             ).measurement_unit
             string_list.append(f'{name} - {amount} {measurement_unit}')
 
-        pdfmetrics.registerFont(TTFont('FreeSans', str(settings.BASE_DIR) + '/recipes/static/FreeSans.ttf', 'UTF-8'))
+        pdfmetrics.registerFont(
+            TTFont(
+                'FreeSans',
+                str(settings.BASE_DIR) + '/recipes/static/FreeSans.ttf',
+                'UTF-8',
+            )
+        )
         buffer = io.BytesIO()
         p = canvas.Canvas(buffer)
         p.setFont("FreeSans", 12)

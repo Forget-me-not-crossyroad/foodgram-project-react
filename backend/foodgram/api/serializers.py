@@ -1,10 +1,9 @@
 from drf_extra_fields.fields import Base64ImageField
+from recipes.models import (Favorite, Ingredient, IngredientAmountRecipe,
+                            IngredientRecipe, Recipe, ShoppingCart, Tag)
 from rest_framework import serializers
 from rest_framework.fields import CurrentUserDefault
 from rest_framework.relations import PrimaryKeyRelatedField
-
-from recipes.models import (Favorite, Ingredient, IngredientAmountRecipe,
-                            IngredientRecipe, Recipe, ShoppingCart, Tag)
 from users.models import Subscription, User
 
 
@@ -71,6 +70,7 @@ class UserRecipeReadSerializer(serializers.ModelSerializer):
         if Subscription.objects.filter(subscribed_to=obj).exists():
             return True
         return False
+
 
 class RecipeReadSerializer(serializers.ModelSerializer):
     tags = TagSerializer(many=True, read_only=True)
@@ -184,8 +184,10 @@ class RecipeCreateSerializer(serializers.ModelSerializer):
                 ingredient_for_recipe = Ingredient.objects.get(
                     id=ingredient_for_recipe_id
                 )
-                ingredient_amount_recipe = IngredientAmountRecipe.objects.create(
-                    amount=amount_for_recipe
+                ingredient_amount_recipe = (
+                    IngredientAmountRecipe.objects.create(
+                        amount=amount_for_recipe
+                    )
                 )
                 IngredientRecipe.objects.create(
                     recipe=instance,
