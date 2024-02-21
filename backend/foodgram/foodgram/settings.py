@@ -25,7 +25,9 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 # See https://docs.djangoproject.com/en/3.2/howto/deployment/checklist/
 
 # SECURITY WARNING: keep the secret key used in production secret!
-SECRET_KEY = 'django-insecure-_vdop+zbenbi^5&@cw8ub@gh*dp^dusml8ys#$+x0il5iihz4@'
+SECRET_KEY = (
+    'django-insecure-_vdop+zbenbi^5&@cw8ub@gh*dp^dusml8ys#$+x0il5iihz4@'
+)
 
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
@@ -39,8 +41,12 @@ ALLOWED_HOSTS = [
     '158.160.83.92',
 ]
 
-CSRF_TRUSTED_ORIGINS = ['https://*.158.160.83.92', 'https://*.127.0.0.1',
-                        'http://*.158.160.83.92', 'http://*.127.0.0.1']
+CSRF_TRUSTED_ORIGINS = [
+    'https://*.158.160.83.92',
+    'https://*.127.0.0.1',
+    'http://*.158.160.83.92',
+    'http://*.127.0.0.1',
+]
 
 
 # Application definition
@@ -111,7 +117,7 @@ DATABASES_PROD = {
         'USER': os.getenv('POSTGRES_USER', 'django'),
         'PASSWORD': os.getenv('POSTGRES_PASSWORD', ''),
         'HOST': os.getenv('DB_HOST', ''),
-        'PORT': os.getenv('DB_PORT', 5432)
+        'PORT': os.getenv('DB_PORT', 5432),
     }
 }
 
@@ -171,15 +177,12 @@ REST_FRAMEWORK = {
     'DEFAULT_PERMISSION_CLASSES': [
         'rest_framework.permissions.IsAuthenticatedOrReadOnly',
     ],
-
     'DEFAULT_AUTHENTICATION_CLASSES': [
         'rest_framework.authentication.TokenAuthentication',
     ],
-
     'DEFAULT_PAGINATION_CLASS': 'rest_framework.pagination.PageNumberPagination',
     'PAGE_SIZE': 6,
-
-    'SEARCH_PARAM': 'q'
+    'SEARCH_PARAM': 'q',
 }
 
 DJOSER = {
@@ -195,8 +198,7 @@ DJOSER = {
     'SERIALIZERS': {
         'user_create': 'users.serializers.UserCreateSerializer',
         'user': 'users.serializers.UserReadSerializer',
-
-    }
+    },
 }
 
 CORS_ORIGIN_ALLOW_ALL = False  # True
