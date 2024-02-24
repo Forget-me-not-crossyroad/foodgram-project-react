@@ -3,7 +3,8 @@ from rest_framework.routers import DefaultRouter
 
 from api.views import (FavoriteViewSet, IngredientViewSet, RecipeViewSet,
                        ShoppingCartDownloadView, ShoppingCartViewSet,
-                       TagViewSet)
+                       TagViewSet, MeViewSet, SetPasswordViewSet, SubscriptionsViewSet, SubscriptionViewSet,
+                       UserViewSet)
 
 router = DefaultRouter()
 router.register('tags', TagViewSet)
@@ -19,10 +20,19 @@ router.register(
     ShoppingCartViewSet,
     basename='shoppingcarts',
 )
+router.register('users/me', MeViewSet)
+router.register('users/set_password', SetPasswordViewSet)
+router.register('users/subscriptions', SubscriptionsViewSet)
+router.register('users', UserViewSet)
+router.register(
+    r'users/(?P<user_id>\d+)/subscribe',
+    SubscriptionViewSet,
+    basename='subscriptions',
+)
 
 
 urlpatterns = [
-    path('users/', include('users.urls')),
+    # path('users/', include('users.urls')),
     re_path(r'auth/', include('djoser.urls.authtoken')),
     path(
         'recipes/download_shopping_cart/',

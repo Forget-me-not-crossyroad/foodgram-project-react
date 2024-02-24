@@ -14,6 +14,7 @@ class Tag(models.Model):
         (ORANGE, 'оранжевый'),
         (GREEN, 'зеленый'),
         (PURPLE, 'фиолетовый'),
+        (BLACK, 'черный'),
     ]
     slug = models.SlugField(unique=True, max_length=200)
     name = models.CharField(unique=True, max_length=200)
