@@ -74,8 +74,24 @@ class UserRecipeReadSerializer(serializers.ModelSerializer):
         depth = 1
 
     def get_is_subscribed(self, obj):
-        if Subscription.objects.filter(subscribed_to=obj).exists():
-            return True
+        context = self.context
+        if not context.get('is_list') is None:
+            user = context['user_subscriber']['username']
+            subscriber_user = User.objects.filter(username=user).get()
+            if Subscription.objects.filter(subscribed_to=subscriber_user, subscriber=subscriber_user).exists():
+                return True
+            return False
+        if not context.get('is_retrieve') is None:
+            user = context['user_subscriber']
+            subscriber_user = User.objects.filter(username=user).get()
+            if Subscription.objects.filter(subscribed_to=obj, subscriber=subscriber_user).exists():
+                return True
+            return False
+        else:
+            context = self.context['request']
+            user_subscriber = context.user
+            if Subscription.objects.filter(subscribed_to=obj, subscriber=user_subscriber).exists():
+                return True
         return False
 
 
@@ -111,12 +127,42 @@ class RecipeReadSerializer(serializers.ModelSerializer):
         depth = 1
 
     def get_is_favorited(self, obj):
-        if Favorite.objects.filter(favorited_recipe=obj).exists():
+        context = self.context
+        if not context.get('is_list') is None:
+            user = context['user_subscriber']['username']
+            favorited_user = User.objects.filter(username=user).get()
+            if Favorite.objects.filter(favorited_recipe=obj, favorited_user=favorited_user).exists():
+                return True
+            return False
+        if not context.get('is_retrieve') is None:
+            user = context['user_subscriber']
+            favorited_user = User.objects.filter(username=user).get()
+            if Favorite.objects.filter(favorited_recipe=obj, favorited_user=favorited_user).exists():
+                return True
+            return False
+        context = self.context['request']
+        favorited_user = context.user
+        if Favorite.objects.filter(favorited_recipe=obj, favorited_user=favorited_user).exists():
             return True
         return False
 
     def get_is_in_shopping_cart(self, obj):
-        if ShoppingCart.objects.filter(shoppingcart_recipe=obj).exists():
+        context = self.context
+        if not context.get('is_list') is None:
+            user = context['user_subscriber']['username']
+            shoppingcart_user = User.objects.filter(username=user).get()
+            if ShoppingCart.objects.filter(shoppingcart_recipe=obj, shoppingcart_user=shoppingcart_user).exists():
+                return True
+            return False
+        if not context.get('is_retrieve') is None:
+            user = context['user_subscriber']
+            shoppingcart_user = User.objects.filter(username=user).get()
+            if ShoppingCart.objects.filter(shoppingcart_recipe=obj, shoppingcart_user=shoppingcart_user).exists():
+                return True
+            return False
+        context = self.context['request']
+        shoppingcart_user = context.user
+        if ShoppingCart.objects.filter(shoppingcart_recipe=obj, shoppingcart_user=shoppingcart_user).exists():
             return True
         return False
 
@@ -146,12 +192,16 @@ class RecipeCreateSerializer(serializers.ModelSerializer):
         depth = 1
 
     def get_is_favorited(self, obj):
-        if Favorite.objects.filter(favorited_recipe=obj).exists():
+        context = self.context['request']
+        favorited_user = context.user
+        if Favorite.objects.filter(favorited_recipe=obj, favorited_user=favorited_user).exists():
             return True
         return False
 
     def get_is_in_shopping_cart(self, obj):
-        if ShoppingCart.objects.filter(shoppingcart_recipe=obj).exists():
+        context = self.context['request']
+        shoppingcart_user = context.user
+        if ShoppingCart.objects.filter(shoppingcart_recipe=obj, shoppingcart_user=shoppingcart_user).exists():
             return True
         return False
 

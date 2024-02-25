@@ -104,7 +104,6 @@ class RecipeViewSet(
     throttle_scope = None
     filter_backends = (DjangoFilterBackend,)
     filter_class = RecipeFilter
-    # filter_fields = ('tags__slug' as tags,)
 
     def get_serializer_class(self):
         if self.action in ('list', 'retrieve'):
@@ -375,10 +374,6 @@ class SubscriptionViewSet(CreateModelMixin, DestroyModelMixin, GenericViewSet):
             serializer_class = SubscriptionSerializer
         return serializer_class
 
-    # def get_serializer_context(self):
-    #     context = {'request': self.request}
-    #     return context
-
     def perform_create(self, serializer):
         subscribed_to = get_object_or_404(User, id=self.kwargs.get("user_id"))
         serializer.save(
@@ -421,7 +416,6 @@ class SubscriptionsViewSet(ReadOnlyModelViewSet):
     serializer_class = SubscriptionsSerializer
     permission_classes = (IsAuthenticated,)
     throttle_scope = None
-    # pagination_class = None
 
     def get_queryset(self):
         subscriber = self.request.user
