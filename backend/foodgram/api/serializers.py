@@ -376,13 +376,18 @@ class UserReadSerializer(serializers.ModelSerializer):
             subscriber_user = User.objects.filter(username=user).get()
             if Subscription.objects.filter(subscribed_to=subscriber_user, subscriber=subscriber_user).exists():
                 return True
+            return False
         if not context.get('is_retrieve') is None:
             user = context['user_subscriber']
             subscriber_user = User.objects.filter(username=user).get()
             if Subscription.objects.filter(subscribed_to=obj, subscriber=subscriber_user).exists():
                 return True
-        if Subscription.objects.filter(subscribed_to=subscriber_user, subscriber=obj).exists():
-            return True
+            return False
+        else:
+            context = self.context['request']
+            user_subscriber = context.user
+            if Subscription.objects.filter(subscribed_to=obj, subscriber=user_subscriber).exists():
+                return True
         return False
 
 
