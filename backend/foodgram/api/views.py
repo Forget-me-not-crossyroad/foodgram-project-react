@@ -3,8 +3,8 @@ import io
 from django.http import FileResponse, Http404
 from django.shortcuts import get_object_or_404
 from django_filters import filters
-from django_filters.rest_framework import DjangoFilterBackend, FilterSet, BooleanFilter
-
+from django_filters.rest_framework import (BooleanFilter, DjangoFilterBackend,
+                                           FilterSet)
 from foodgram import settings
 from foodgram.permission import OwnerOrReadOnly
 from recipes.models import (Favorite, Ingredient, IngredientRecipe, Recipe,
@@ -22,15 +22,18 @@ from rest_framework.permissions import AllowAny, IsAuthenticated
 from rest_framework.response import Response
 from rest_framework.views import APIView
 from rest_framework.viewsets import GenericViewSet, ReadOnlyModelViewSet
+from users.models import Me, SetPassword, Subscription, User
 
 from api.serializers import (FavoriteDeleteSerializer, FavoriteSerializer,
-                             IngredientSerializer, RecipeCreateSerializer,
-                             RecipeReadSerializer,
+                             IngredientSerializer, MeReadSerializer,
+                             RecipeCreateSerializer, RecipeReadSerializer,
+                             SetPasswordSerializer,
                              ShoppingCartDeleteSerializer,
-                             ShoppingCartSerializer, TagSerializer, SubscriptionSerializer,
-                             SubscriptionDeleteSerializer, SetPasswordSerializer, MeReadSerializer,
-                             UserCreateSerializer, UserReadSerializer, SubscriptionsSerializer)
-from users.models import Subscription, SetPassword, Me, User
+                             ShoppingCartSerializer,
+                             SubscriptionDeleteSerializer,
+                             SubscriptionSerializer, SubscriptionsSerializer,
+                             TagSerializer, UserCreateSerializer,
+                             UserReadSerializer)
 
 
 class TagViewSet(ListModelMixin, RetrieveModelMixin, GenericViewSet):
@@ -71,7 +74,11 @@ class RecipeFilter(FilterSet):
 
     class Meta:
         model = Recipe
-        fields = ['tags', 'author', 'is_favorited',]
+        fields = [
+            'tags',
+            'author',
+            'is_favorited',
+        ]
 
     def filter_tags(self, queryset, slug, tags):
         return queryset.filter(tags__slug__icontains=tags)
@@ -82,12 +89,18 @@ class RecipeFilter(FilterSet):
     def get_favorited(self, queryset, is_favorited, *args, **kwargs):
         if not is_favorited:
             return queryset
-        return queryset.filter(favorited_recipe__favorited_user=self.request.user)
+        return queryset.filter(
+            favorited_recipe__favorited_user=self.request.user
+        )
 
-    def get_is_in_shopping_cart(self, queryset, is_shoppingcart, *args, **kwargs):
+    def get_is_in_shopping_cart(
+        self, queryset, is_shoppingcart, *args, **kwargs
+    ):
         if not is_shoppingcart:
             return queryset
-        return queryset.filter(shoppingcart_recipe__shoppingcart_user=self.request.user)
+        return queryset.filter(
+            shoppingcart_recipe__shoppingcart_user=self.request.user
+        )
 
 
 class RecipeViewSet(
@@ -293,6 +306,7 @@ class ShoppingCartDownloadView(APIView):
             buffer, as_attachment=True, filename="cart_list.pdf"
         )
 
+
 class UserViewSet(CreateModelMixin, ReadOnlyModelViewSet):
 
     queryset = User.objects.all()
@@ -331,7 +345,6 @@ class MeViewSet(ListModelMixin, GenericViewSet):
         return Me.objects.filter(id=user_id)
 
     def list(self, request, *args, **kwargs):
-        user = self.request.user
         serializer = MeReadSerializer(self.get_queryset(), many=True)
         return Response(serializer.data[0])
 

@@ -3,15 +3,15 @@ from django.db import IntegrityError
 from django.http import Http404
 from django.utils import timezone
 from drf_extra_fields.fields import Base64ImageField
-from rest_framework.exceptions import ValidationError
-
-from api.exceptions import SubscriptionError
 from recipes.models import (Favorite, Ingredient, IngredientAmountRecipe,
                             IngredientRecipe, Recipe, ShoppingCart, Tag)
 from rest_framework import serializers
+from rest_framework.exceptions import ValidationError
 from rest_framework.fields import CurrentUserDefault
 from rest_framework.relations import PrimaryKeyRelatedField
-from users.models import Subscription, User, SetPassword, Me
+from users.models import Me, SetPassword, Subscription, User
+
+from api.exceptions import SubscriptionError
 
 
 class TagSerializer(serializers.ModelSerializer):
@@ -78,19 +78,25 @@ class UserRecipeReadSerializer(serializers.ModelSerializer):
         if not context.get('is_list') is None:
             user = context['user_subscriber']['username']
             subscriber_user = User.objects.filter(username=user).get()
-            if Subscription.objects.filter(subscribed_to=subscriber_user, subscriber=subscriber_user).exists():
+            if Subscription.objects.filter(
+                subscribed_to=subscriber_user, subscriber=subscriber_user
+            ).exists():
                 return True
             return False
         if not context.get('is_retrieve') is None:
             user = context['user_subscriber']
             subscriber_user = User.objects.filter(username=user).get()
-            if Subscription.objects.filter(subscribed_to=obj, subscriber=subscriber_user).exists():
+            if Subscription.objects.filter(
+                subscribed_to=obj, subscriber=subscriber_user
+            ).exists():
                 return True
             return False
         else:
             context = self.context['request']
             user_subscriber = context.user
-            if Subscription.objects.filter(subscribed_to=obj, subscriber=user_subscriber).exists():
+            if Subscription.objects.filter(
+                subscribed_to=obj, subscriber=user_subscriber
+            ).exists():
                 return True
         return False
 
@@ -131,18 +137,24 @@ class RecipeReadSerializer(serializers.ModelSerializer):
         if not context.get('is_list') is None:
             user = context['user_subscriber']['username']
             favorited_user = User.objects.filter(username=user).get()
-            if Favorite.objects.filter(favorited_recipe=obj, favorited_user=favorited_user).exists():
+            if Favorite.objects.filter(
+                favorited_recipe=obj, favorited_user=favorited_user
+            ).exists():
                 return True
             return False
         if not context.get('is_retrieve') is None:
             user = context['user_subscriber']
             favorited_user = User.objects.filter(username=user).get()
-            if Favorite.objects.filter(favorited_recipe=obj, favorited_user=favorited_user).exists():
+            if Favorite.objects.filter(
+                favorited_recipe=obj, favorited_user=favorited_user
+            ).exists():
                 return True
             return False
         context = self.context['request']
         favorited_user = context.user
-        if Favorite.objects.filter(favorited_recipe=obj, favorited_user=favorited_user).exists():
+        if Favorite.objects.filter(
+            favorited_recipe=obj, favorited_user=favorited_user
+        ).exists():
             return True
         return False
 
@@ -151,18 +163,24 @@ class RecipeReadSerializer(serializers.ModelSerializer):
         if not context.get('is_list') is None:
             user = context['user_subscriber']['username']
             shoppingcart_user = User.objects.filter(username=user).get()
-            if ShoppingCart.objects.filter(shoppingcart_recipe=obj, shoppingcart_user=shoppingcart_user).exists():
+            if ShoppingCart.objects.filter(
+                shoppingcart_recipe=obj, shoppingcart_user=shoppingcart_user
+            ).exists():
                 return True
             return False
         if not context.get('is_retrieve') is None:
             user = context['user_subscriber']
             shoppingcart_user = User.objects.filter(username=user).get()
-            if ShoppingCart.objects.filter(shoppingcart_recipe=obj, shoppingcart_user=shoppingcart_user).exists():
+            if ShoppingCart.objects.filter(
+                shoppingcart_recipe=obj, shoppingcart_user=shoppingcart_user
+            ).exists():
                 return True
             return False
         context = self.context['request']
         shoppingcart_user = context.user
-        if ShoppingCart.objects.filter(shoppingcart_recipe=obj, shoppingcart_user=shoppingcart_user).exists():
+        if ShoppingCart.objects.filter(
+            shoppingcart_recipe=obj, shoppingcart_user=shoppingcart_user
+        ).exists():
             return True
         return False
 
@@ -194,14 +212,18 @@ class RecipeCreateSerializer(serializers.ModelSerializer):
     def get_is_favorited(self, obj):
         context = self.context['request']
         favorited_user = context.user
-        if Favorite.objects.filter(favorited_recipe=obj, favorited_user=favorited_user).exists():
+        if Favorite.objects.filter(
+            favorited_recipe=obj, favorited_user=favorited_user
+        ).exists():
             return True
         return False
 
     def get_is_in_shopping_cart(self, obj):
         context = self.context['request']
         shoppingcart_user = context.user
-        if ShoppingCart.objects.filter(shoppingcart_recipe=obj, shoppingcart_user=shoppingcart_user).exists():
+        if ShoppingCart.objects.filter(
+            shoppingcart_recipe=obj, shoppingcart_user=shoppingcart_user
+        ).exists():
             return True
         return False
 
@@ -424,19 +446,25 @@ class UserReadSerializer(serializers.ModelSerializer):
         if not context.get('is_list') is None:
             user = context['user_subscriber']['username']
             subscriber_user = User.objects.filter(username=user).get()
-            if Subscription.objects.filter(subscribed_to=subscriber_user, subscriber=subscriber_user).exists():
+            if Subscription.objects.filter(
+                subscribed_to=subscriber_user, subscriber=subscriber_user
+            ).exists():
                 return True
             return False
         if not context.get('is_retrieve') is None:
             user = context['user_subscriber']
             subscriber_user = User.objects.filter(username=user).get()
-            if Subscription.objects.filter(subscribed_to=obj, subscriber=subscriber_user).exists():
+            if Subscription.objects.filter(
+                subscribed_to=obj, subscriber=subscriber_user
+            ).exists():
                 return True
             return False
         else:
             context = self.context['request']
             user_subscriber = context.user
-            if Subscription.objects.filter(subscribed_to=obj, subscriber=user_subscriber).exists():
+            if Subscription.objects.filter(
+                subscribed_to=obj, subscriber=user_subscriber
+            ).exists():
                 return True
         return False
 
@@ -471,7 +499,9 @@ class MeReadSerializer(serializers.ModelSerializer):
         depth = 1
 
     def get_is_subscribed(self, obj):
-        if Subscription.objects.filter(subscribed_to=obj, subscriber=obj).exists():
+        if Subscription.objects.filter(
+            subscribed_to=obj, subscriber=obj
+        ).exists():
             return True
         return False
 
@@ -517,7 +547,9 @@ class SubscriptionSerializer(serializers.ModelSerializer):
         context = {}
         context['user_subscriber'] = user_subscriber
         context['is_retrieve'] = True
-        serializer = UserSubscriptionSerializer(instance.subscribed_to,  context=context)
+        serializer = UserSubscriptionSerializer(
+            instance.subscribed_to, context=context
+        )
         return serializer.data
 
     def create(self, validated_data):
@@ -557,7 +589,9 @@ class SubscriptionsSerializer(serializers.ModelSerializer):
         context = {}
         context['user_subscriber'] = user_subscriber
         context['is_list'] = True
-        serializer = UserSubscriptionSerializer(instance.subscribed_to, context=context)
+        serializer = UserSubscriptionSerializer(
+            instance.subscribed_to, context=context
+        )
         return serializer.data
 
     class Meta:
