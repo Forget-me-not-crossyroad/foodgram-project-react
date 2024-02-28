@@ -3,15 +3,15 @@ from django.db import IntegrityError
 from django.http import Http404
 from django.utils import timezone
 from drf_extra_fields.fields import Base64ImageField
-from recipes.models import (Favorite, Ingredient, IngredientAmountRecipe,
-                            IngredientRecipe, Recipe, ShoppingCart, Tag)
 from rest_framework import serializers
 from rest_framework.exceptions import ValidationError
 from rest_framework.fields import CurrentUserDefault
 from rest_framework.relations import PrimaryKeyRelatedField
-from users.models import Me, SetPassword, Subscription, User
 
 from api.exceptions import SubscriptionError
+from recipes.models import (Favorite, Ingredient, IngredientAmountRecipe,
+                            IngredientRecipe, Recipe, ShoppingCart, Tag)
+from users.models import Me, SetPassword, Subscription, User
 
 
 class TagSerializer(serializers.ModelSerializer):
@@ -79,7 +79,7 @@ class UserRecipeReadSerializer(serializers.ModelSerializer):
             user = context['user_subscriber']['username']
             subscriber_user = User.objects.filter(username=user).get()
             if Subscription.objects.filter(
-                subscribed_to=subscriber_user, subscriber=subscriber_user
+                subscribed_to=obj, subscriber=subscriber_user
             ).exists():
                 return True
             return False

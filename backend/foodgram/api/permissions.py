@@ -4,6 +4,4 @@ from rest_framework import permissions
 class IsAuthorOrForbidden(permissions.BasePermission):
 
     def has_object_permission(self, request, view, obj):
-        if obj == request.user:
-            return True
-        return False
+        return obj == request.user
