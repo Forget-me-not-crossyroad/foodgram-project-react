@@ -9,8 +9,16 @@ from rest_framework.fields import CurrentUserDefault
 from rest_framework.relations import PrimaryKeyRelatedField
 
 from api.exceptions import SubscriptionError
-from recipes.models import (Favorite, Ingredient, IngredientAmountRecipe,
-                            IngredientRecipe, Recipe, ShoppingCart, Tag)
+from api.utils import proccess_custom_context
+from recipes.models import (
+    Favorite,
+    Ingredient,
+    IngredientAmountRecipe,
+    IngredientRecipe,
+    Recipe,
+    ShoppingCart,
+    Tag,
+)
 from users.models import Me, SetPassword, Subscription, User
 
 
@@ -74,31 +82,14 @@ class UserRecipeReadSerializer(serializers.ModelSerializer):
         depth = 1
 
     def get_is_subscribed(self, obj):
-        context = self.context
-        if not context.get('is_list') is None:
-            user = context['user_subscriber']['username']
-            subscriber_user = User.objects.filter(username=user).get()
-            if Subscription.objects.filter(
-                subscribed_to=obj, subscriber=subscriber_user
-            ).exists():
-                return True
-            return False
-        if not context.get('is_retrieve') is None:
-            user = context['user_subscriber']
-            subscriber_user = User.objects.filter(username=user).get()
-            if Subscription.objects.filter(
-                subscribed_to=obj, subscriber=subscriber_user
-            ).exists():
-                return True
-            return False
-        else:
-            context = self.context['request']
-            user_subscriber = context.user
-            if Subscription.objects.filter(
-                subscribed_to=obj, subscriber=user_subscriber
-            ).exists():
-                return True
-        return False
+        return proccess_custom_context(
+            instance=obj,
+            modelfield_first='subscribed_to',
+            modelfield_second='subscriber',
+            self=self,
+            app_name='users',
+            model_name='Subscription',
+        )
 
 
 class RecipeReadSerializer(serializers.ModelSerializer):
