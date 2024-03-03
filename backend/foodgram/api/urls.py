@@ -33,7 +33,6 @@ router.register(
 
 
 urlpatterns = [
-    # path('users/', include('users.urls')),
     re_path(r'auth/', include('djoser.urls.authtoken')),
     path(
         'recipes/download_shopping_cart/',

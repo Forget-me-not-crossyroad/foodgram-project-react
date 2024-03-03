@@ -1,6 +1,7 @@
 from django.apps import apps
 from django.db import models
 
+from recipes.models import IngredientAmountRecipe, IngredientRecipe
 from users.models import User
 
 
@@ -37,3 +38,23 @@ def proccess_custom_context(
 
 def get_model_instance(app_name, model_name):
     return apps.get_model(f"{app_name}.{model_name}")
+
+
+def proccess_recipe_ingredients_data(self, instance):
+    context = self.context['request']
+    ingredients = context.data['ingredients']
+    recipes_ingredients_bulkcreate = []
+    for ingredient in ingredients:
+        ingredient_for_recipe_id = ingredient['id']
+        amount_for_recipe = ingredient['amount']
+        ingredient_amount_recipe = IngredientAmountRecipe.objects.create(
+            amount=amount_for_recipe
+        )
+        recipes_ingredients_bulkcreate.append(
+            IngredientRecipe(
+                recipe=instance,
+                amount=ingredient_amount_recipe,
+                ingredient_id=ingredient_for_recipe_id,
+            )
+        )
+    IngredientRecipe.objects.bulk_create(recipes_ingredients_bulkcreate)

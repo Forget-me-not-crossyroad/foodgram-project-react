@@ -5,6 +5,8 @@ from django.shortcuts import get_object_or_404
 from django_filters import filters
 from django_filters.rest_framework import (BooleanFilter, DjangoFilterBackend,
                                            FilterSet)
+
+from api.filters import RecipeFilter
 from foodgram import settings
 from foodgram.permission import OwnerOrReadOnly
 from recipes.models import (Favorite, Ingredient, IngredientRecipe, Recipe,
@@ -21,12 +23,12 @@ from rest_framework.mixins import (CreateModelMixin, DestroyModelMixin,
 from rest_framework.permissions import AllowAny, IsAuthenticated
 from rest_framework.response import Response
 from rest_framework.views import APIView
-from rest_framework.viewsets import GenericViewSet, ReadOnlyModelViewSet
+from rest_framework.viewsets import GenericViewSet, ReadOnlyModelViewSet, ModelViewSet
 from users.models import Me, SetPassword, Subscription, User
 
 from api.serializers import (FavoriteDeleteSerializer, FavoriteSerializer,
                              IngredientSerializer, MeReadSerializer,
-                             RecipeCreateSerializer, RecipeReadSerializer,
+                             RecipeCreateUpdateSerializer, RecipeReadSerializer,
                              SetPasswordSerializer,
                              ShoppingCartDeleteSerializer,
                              ShoppingCartSerializer,
@@ -36,26 +38,15 @@ from api.serializers import (FavoriteDeleteSerializer, FavoriteSerializer,
                              UserReadSerializer)
 
 
-class TagViewSet(ListModelMixin, RetrieveModelMixin, GenericViewSet):
+class TagViewSet(ModelViewSet):
     queryset = Tag.objects.all()
     serializer_class = TagSerializer
     permission_classes = (AllowAny,)
     throttle_scope = None
     pagination_class = None
 
-    def retrieve(self, request, *args, **kwargs):
-        if not Tag.objects.filter(id=self.kwargs.get('pk')).exists():
-            return Response(
-                {'errors': 'Объект не найден'},
-                status=status.HTTP_404_NOT_FOUND,
-            )
-        super().retrieve(request, *args, **kwargs)
-        instance = self.get_object()
-        serializer = self.get_serializer(instance)
-        return Response(serializer.data, status=status.HTTP_200_OK)
 
-
-class IngredientViewSet(ListModelMixin, RetrieveModelMixin, GenericViewSet):
+class IngredientViewSet(ModelViewSet):
     SearchFilter.search_param = 'name'
     queryset = Ingredient.objects.all()
     serializer_class = IngredientSerializer
@@ -64,43 +55,6 @@ class IngredientViewSet(ListModelMixin, RetrieveModelMixin, GenericViewSet):
     pagination_class = None
     filter_backends = (SearchFilter,)
     search_fields = ['name']
-
-
-class RecipeFilter(FilterSet):
-    tags = filters.CharFilter(field_name="tags__slug", method='filter_tags')
-    author = filters.CharFilter(field_name="author", method='filter_author')
-    is_favorited = BooleanFilter(method='get_favorited')
-    is_in_shopping_cart = BooleanFilter(method='get_is_in_shopping_cart')
-
-    class Meta:
-        model = Recipe
-        fields = [
-            'tags',
-            'author',
-            'is_favorited',
-        ]
-
-    def filter_tags(self, queryset, slug, tags):
-        return queryset.filter(tags__slug__icontains=tags)
-
-    def filter_author(self, queryset, id, author):
-        return queryset.filter(author=author)
-
-    def get_favorited(self, queryset, is_favorited, *args, **kwargs):
-        if not is_favorited:
-            return queryset
-        return queryset.filter(
-            favorited_recipe__favorited_user=self.request.user
-        )
-
-    def get_is_in_shopping_cart(
-        self, queryset, is_shoppingcart, *args, **kwargs
-    ):
-        if not is_shoppingcart:
-            return queryset
-        return queryset.filter(
-            shoppingcart_recipe__shoppingcart_user=self.request.user
-        )
 
 
 class RecipeViewSet(
@@ -120,10 +74,9 @@ class RecipeViewSet(
 
     def get_serializer_class(self):
         if self.action in ('list', 'retrieve'):
-            serializer_class = RecipeReadSerializer
+            return RecipeReadSerializer
         else:
-            serializer_class = RecipeCreateSerializer
-        return serializer_class
+            return RecipeCreateUpdateSerializer
 
 
 class FavoriteViewSet(CreateModelMixin, DestroyModelMixin, GenericViewSet):
@@ -138,10 +91,9 @@ class FavoriteViewSet(CreateModelMixin, DestroyModelMixin, GenericViewSet):
 
     def get_serializer_class(self):
         if self.action in ('delete',):
-            serializer_class = FavoriteDeleteSerializer
+            return FavoriteDeleteSerializer
         else:
-            serializer_class = FavoriteSerializer
-        return serializer_class
+            return FavoriteSerializer
 
     def perform_create(self, serializer):
         favorited_recipe = get_object_or_404(
