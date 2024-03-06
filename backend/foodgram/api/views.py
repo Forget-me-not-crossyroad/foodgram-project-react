@@ -36,6 +36,7 @@ from api.serializers import (FavoriteDeleteSerializer, FavoriteSerializer,
                              SubscriptionSerializer, SubscriptionsSerializer,
                              TagSerializer, UserCreateSerializer,
                              UserReadSerializer)
+from api.utils import process_perform_create, proccess_delete
 
 
 class TagViewSet(ModelViewSet):
@@ -96,42 +97,16 @@ class FavoriteViewSet(CreateModelMixin, DestroyModelMixin, GenericViewSet):
             return FavoriteSerializer
 
     def perform_create(self, serializer):
-        favorited_recipe = get_object_or_404(
-            Recipe, id=self.kwargs.get("recipe_id")
-        )
-        serializer.save(
-            favorited_user=self.request.user, favorited_recipe=favorited_recipe
-        )
+        process_perform_create(
+            self=self, serializer=serializer,
+            model=Recipe, modelfield_first='favorited_user',
+            modelfield_second='favorited_recipe')
 
     def delete(self, request, *args, **kwargs):
-        if not Recipe.objects.filter(id=self.kwargs.get('recipe_id')).exists():
-            return Response(
-                {'errors': 'Объект не найден'},
-                status=status.HTTP_404_NOT_FOUND,
-            )
-        favorited_recipe = get_object_or_404(
-            Recipe, id=self.kwargs.get("recipe_id")
-        )
-        if not Favorite.objects.filter(
-            favorited_user=self.request.user, favorited_recipe=favorited_recipe
-        ).exists():
-            return Response(
-                {
-                    'errors': 'Ошибка удаления'
-                    ' из избранного (рецепт'
-                    ' не был в избранном)'
-                },
-                status=status.HTTP_400_BAD_REQUEST,
-            )
-        favorited = get_object_or_404(
-            Favorite,
-            favorited_user=self.request.user,
-            favorited_recipe=favorited_recipe,
-        )
-        favorited.delete()
-        return Response(
-            {'success': 'Рецепт успешно удален из избранного.'},
-            status=status.HTTP_204_NO_CONTENT,
+        return proccess_delete(
+         self=self, model_first_field=Recipe,
+         model_for_deletion=Favorite, modelfield_first='favorited_user',
+         modelfield_second='favorited_recipe'
         )
 
 
@@ -147,51 +122,21 @@ class ShoppingCartViewSet(CreateModelMixin, DestroyModelMixin, GenericViewSet):
 
     def get_serializer_class(self):
         if self.action in ('delete',):
-            serializer_class = ShoppingCartDeleteSerializer
+            return ShoppingCartDeleteSerializer
         else:
-            serializer_class = ShoppingCartSerializer
-        return serializer_class
+            return ShoppingCartSerializer
 
     def perform_create(self, serializer):
-        shoppingcart_recipe = get_object_or_404(
-            Recipe, id=self.kwargs.get("recipe_id")
-        )
-        serializer.save(
-            shoppingcart_user=self.request.user,
-            shoppingcart_recipe=shoppingcart_recipe,
-        )
+        process_perform_create(
+            self=self, serializer=serializer,
+            model=Recipe, modelfield_first='shoppingcart_user',
+            modelfield_second='shoppingcart_recipe')
 
     def delete(self, request, *args, **kwargs):
-        if not Recipe.objects.filter(id=self.kwargs.get('recipe_id')).exists():
-            return Response(
-                {'errors': 'Объект не найден'},
-                status=status.HTTP_404_NOT_FOUND,
-            )
-        shoppingcart_recipe = get_object_or_404(
-            Recipe, id=self.kwargs.get("recipe_id")
-        )
-        if not ShoppingCart.objects.filter(
-            shoppingcart_user=self.request.user,
-            shoppingcart_recipe=shoppingcart_recipe,
-        ).exists():
-            return Response(
-                {
-                    'errors': 'Ошибка'
-                    ' удаления из'
-                    ' корзины'
-                    ' (рецепт не был в корзине)'
-                },
-                status=status.HTTP_400_BAD_REQUEST,
-            )
-        shoppingcart = get_object_or_404(
-            ShoppingCart,
-            shoppingcart_user=self.request.user,
-            shoppingcart_recipe=shoppingcart_recipe,
-        )
-        shoppingcart.delete()
-        return Response(
-            {'success': 'Рецепт успешно удален из корзины.'},
-            status=status.HTTP_204_NO_CONTENT,
+        return proccess_delete(
+            self=self, model_first_field=Recipe,
+            model_for_deletion=ShoppingCart, modelfield_first='shoppingcart_user',
+            modelfield_second='shoppingcart_recipe'
         )
 
 
@@ -334,10 +279,9 @@ class SubscriptionViewSet(CreateModelMixin, DestroyModelMixin, GenericViewSet):
 
     def get_serializer_class(self):
         if self.action in ('delete',):
-            serializer_class = SubscriptionDeleteSerializer
+            return SubscriptionDeleteSerializer
         else:
-            serializer_class = SubscriptionSerializer
-        return serializer_class
+            return SubscriptionSerializer
 
     def perform_create(self, serializer):
         subscribed_to = get_object_or_404(User, id=self.kwargs.get("user_id"))
@@ -383,5 +327,4 @@ class SubscriptionsViewSet(ReadOnlyModelViewSet):
     throttle_scope = None
 
     def get_queryset(self):
-        subscriber = self.request.user
-        return Subscription.objects.filter(subscriber=subscriber)
+        return Subscription.objects.filter(subscriber=self.request.user)
