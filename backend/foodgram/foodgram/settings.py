@@ -25,21 +25,12 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 # See https://docs.djangoproject.com/en/3.2/howto/deployment/checklist/
 
 # SECURITY WARNING: keep the secret key used in production secret!
-SECRET_KEY = (
-    'django-insecure-_vdop+zbenbi^5&@cw8ub@gh*dp^dusml8ys#$+x0il5iihz4@'
-)
+SECRET_KEY = os.getenv('SECRET_KEY', default='SECRET')
 
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = True
+DEBUG = os.getenv('DEBUG_MODE', default=True)
 
-ALLOWED_HOSTS = [
-    '127.0.0.1',
-    'web',
-    '*',
-    'localhost',
-    'app-foodgram.3utilities.com',
-    '158.160.83.92',
-]
+ALLOWED_HOSTS = os.getenv('ALLOWED_HOSTS', default='127.0.0.1, localhost').split()
 
 CSRF_TRUSTED_ORIGINS = [
     'https://*.158.160.83.92',
@@ -47,7 +38,6 @@ CSRF_TRUSTED_ORIGINS = [
     'http://*.158.160.83.92',
     'http://*.127.0.0.1',
 ]
-
 
 # Application definition
 

@@ -61,6 +61,10 @@ class User(AbstractBaseUser, PermissionsMixin):
 
 
 class Me(User):
+    # практика использования proxy-моделей
+    # взята из коммерческого опыта и для
+    # удобочитаемости кода для отдельного
+    # энпоинта
 
     def save(
         self,
@@ -76,6 +80,10 @@ class Me(User):
 
 
 class SetPassword(models.Model):
+    # при попытке переопределить функционал на
+    # дефолтный set_password из djoser
+    # возникли большие проблемы с переопределением роутов,
+    # поэтому оставил кастомный функционал
     created = models.DateTimeField(auto_now_add=True)
     user = models.ForeignKey('users.User', on_delete=models.CASCADE)
     current_password = models.CharField(max_length=150)

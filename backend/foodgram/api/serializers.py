@@ -1,9 +1,10 @@
 from django.core.exceptions import BadRequest
 from django.db import IntegrityError
 from django.http import Http404
+from django.shortcuts import get_object_or_404
 from django.utils import timezone
 from drf_extra_fields.fields import Base64ImageField
-from rest_framework import serializers
+from rest_framework import serializers, status
 from rest_framework.exceptions import ValidationError
 from rest_framework.fields import CurrentUserDefault
 from rest_framework.relations import PrimaryKeyRelatedField
@@ -157,6 +158,33 @@ class RecipeCreateUpdateSerializer(serializers.ModelSerializer):
             'tags',
         )
         depth = 1
+
+    def validate_tags(self, value):
+        tags = value
+        if not tags:
+            raise ValidationError({'tags': 'Отсутвует тег'})
+        tags_list = []
+        for tag in tags:
+            if tag in tags_list:
+                raise ValidationError({'tags': 'Теги дублируются'})
+            tags_list.append(tag)
+        return value
+
+    def validate_ingredients(self, value):
+        ingredients = value
+        if not ingredients:
+            raise ValidationError({'ingredients': 'Выберите ингредиенты'})
+        ingredients_list = []
+        for item in ingredients:
+            ingredient = get_object_or_404(Ingredient, name=item['id'])
+            if ingredient in ingredients_list:
+                raise ValidationError(
+                    {'ingredients': 'Ингридиенты дублируются'}
+                )
+            if int(item['amount']) <= 0:
+                raise ValidationError({'amount': 'Выберите число большее 0'})
+            ingredients_list.append(ingredient)
+        return value
 
     def create(self, validated_data):
         tags = validated_data.pop('tags')
@@ -322,6 +350,10 @@ class MeReadSerializer(serializers.ModelSerializer):
 
 
 class SetPasswordSerializer(serializers.ModelSerializer):
+    # при попытке переопределить функционал на
+    # дефолтный set_password из djoser
+    # возникли большие проблемы с переопределением роутов,
+    # поэтому оставил кастомный функционал
     user = serializers.HiddenField(default=CurrentUserDefault())
     created = serializers.HiddenField(default=timezone.now)
     current_password = serializers.CharField(
@@ -381,6 +413,23 @@ class SubscriptionSerializer(serializers.ModelSerializer):
         )
         read_only_fields = fields
         depth = 1
+
+    def validate(self, data):
+        subscribed_to = self.context.get('subscribed_to')
+        subscriber = self.context.get('request').user
+        if subscribed_to == subscriber:
+            raise ValidationError(
+                detail='Нельзя подписаться на свой аккаунт',
+                code=status.HTTP_400_BAD_REQUEST,
+            )
+        if Subscription.objects.filter(
+            subscribed_to=subscribed_to, subscriber=subscriber
+        ).exists():
+            raise ValidationError(
+                detail='Вы уже подписаны на данного автора',
+                code=status.HTTP_400_BAD_REQUEST,
+            )
+        return data
 
 
 class SubscriptionDeleteSerializer(serializers.ModelSerializer):

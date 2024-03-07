@@ -4,6 +4,9 @@ from django.utils.deconstruct import deconstructible
 from users.models import User
 
 
+# аннотация необходима для использования
+# дефолтного знаачения при создании,
+# иначе - ошибка
 @deconstructible
 class Tag(models.Model):
     BLACK = '000000'
@@ -16,8 +19,20 @@ class Tag(models.Model):
         (PURPLE, 'фиолетовый'),
         (BLACK, 'черный'),
     ]
-    slug = models.SlugField(unique=True, max_length=200)
-    name = models.CharField(unique=True, max_length=200)
+    slug = models.SlugField(
+        unique=True,
+        max_length=200,
+        verbose_name='Идентификатор',
+        help_text=(
+            'Идентификатор страницы для URL; разрешены символы'
+            ' латиницы, цифры, дефис и подчёркивание.'
+        ),
+    )
+    name = models.CharField(
+        unique=True,
+        max_length=200,
+        help_text='Введите текст',
+    )
     color = models.CharField(
         default=BLACK, unique=True, max_length=7, choices=COLOR_LIST
     )
@@ -77,6 +92,9 @@ class Recipe(models.Model):
         return self.name
 
 
+# аннотация необходима для использования
+# дефолтного знаачения при создании,
+# иначе - ошибка
 @deconstructible
 class IngredientAmountRecipe(models.Model):
     amount = models.CharField(max_length=150, default=1)
@@ -106,6 +124,14 @@ class IngredientRecipe(models.Model):
         on_delete=models.CASCADE,
         related_name='RecipeIngredients',
     )
+
+    class Meta:
+        constraints = [
+            models.UniqueConstraint(
+                fields=['recipe', 'ingredient'],
+                name='unique_recipe_ingredients',
+            )
+        ]
 
 
 class Favorite(models.Model):
