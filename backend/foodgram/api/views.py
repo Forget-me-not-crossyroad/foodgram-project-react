@@ -6,11 +6,6 @@ from django.http import FileResponse, Http404
 from django.shortcuts import get_object_or_404
 from django_filters.rest_framework import DjangoFilterBackend
 
-from api.filters import RecipeFilter
-from foodgram import settings
-from foodgram.permission import OwnerOrReadOnly
-from recipes.models import (Favorite, Ingredient, IngredientRecipe, Recipe,
-                            ShoppingCart, Tag)
 from reportlab.lib.units import inch
 from reportlab.pdfbase import pdfmetrics
 from reportlab.pdfbase.ttfonts import TTFont
@@ -24,7 +19,6 @@ from rest_framework.permissions import AllowAny, IsAuthenticated
 from rest_framework.response import Response
 from rest_framework.views import APIView
 from rest_framework.viewsets import GenericViewSet, ReadOnlyModelViewSet, ModelViewSet
-from users.models import Me, SetPassword, Subscription, User
 
 from api.serializers import (FavoriteDeleteSerializer, FavoriteSerializer,
                              IngredientSerializer, MeReadSerializer,
@@ -36,7 +30,13 @@ from api.serializers import (FavoriteDeleteSerializer, FavoriteSerializer,
                              SubscriptionSerializer, SubscriptionsSerializer,
                              TagSerializer, UserCreateSerializer,
                              UserReadSerializer)
+from api.filters import RecipeFilter
 from api.utils import process_perform_create, proccess_delete
+from foodgram import settings
+from foodgram.permission import OwnerOrReadOnly
+from recipes.models import (Favorite, Ingredient, IngredientRecipe, Recipe,
+                            ShoppingCart, Tag)
+from users.models import Me, SetPassword, Subscription, User
 
 
 class TagViewSet(ModelViewSet):
