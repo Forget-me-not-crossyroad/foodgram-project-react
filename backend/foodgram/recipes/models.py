@@ -92,18 +92,19 @@ class Recipe(models.Model):
         verbose_name='Название рецепта',
         help_text='Название рецепта, не более 200 символов',
         max_length=150,
-        default='Укажите название рецепта')
+        default='Укажите название рецепта',
+    )
     author = models.ForeignKey(
         User,
         verbose_name='Автор',
         help_text='Поле связи с моделью автора',
         on_delete=models.CASCADE,
-        related_name='recipes'
+        related_name='recipes',
     )
     text = models.TextField(
         verbose_name='Текст описания',
         help_text='Введите описание приготовления',
-        default='Дополните рецепт описанием'
+        default='Дополните рецепт описанием',
     )
     image = models.ImageField(
         verbose_name='Изображение блюда',
@@ -115,7 +116,7 @@ class Recipe(models.Model):
     created = models.DateTimeField(
         verbose_name='Время создания',
         help_text='Создается автоматически при создании блюда',
-        auto_now_add=True
+        auto_now_add=True,
     )
     cooking_time = models.IntegerField(
         verbose_name='Время приготовления',
@@ -135,7 +136,7 @@ class Recipe(models.Model):
         Tag,
         verbose_name='Поле связи с моделью тега',
         help_text='Укажите тег',
-        default=Tag.get_default_tag()
+        default=Tag.get_default_tag(),
     )
 
     class Meta:
@@ -164,7 +165,7 @@ class IngredientAmountRecipe(models.Model):
         ],
         verbose_name='Количество',
         max_length=150,
-        default=1
+        default=1,
     )
 
     @classmethod
@@ -220,14 +221,14 @@ class Favorite(models.Model):
         verbose_name='Лайкнувший пользователь',
         help_text='В избранном у пользователя',
         on_delete=models.CASCADE,
-        related_name='favorited_user'
+        related_name='favorited_user',
     )
     favorited_recipe = models.ForeignKey(
         'Recipe',
         verbose_name='Лайкнутый рецепт',
         help_text='Избранный рецепт',
         on_delete=models.CASCADE,
-        related_name='favorited_recipe'
+        related_name='favorited_recipe',
     )
 
     class Meta:
@@ -254,7 +255,7 @@ class ShoppingCart(models.Model):
         verbose_name='Добавивлено в корзину',
         help_text='Рецепт в корзине',
         on_delete=models.CASCADE,
-        related_name='shoppingcart_recipe'
+        related_name='shoppingcart_recipe',
     )
 
     class Meta:

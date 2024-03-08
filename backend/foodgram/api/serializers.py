@@ -4,13 +4,6 @@ from django.http import Http404
 from django.shortcuts import get_object_or_404
 from django.utils import timezone
 from drf_extra_fields.fields import Base64ImageField
-from rest_framework import serializers, status
-from rest_framework.exceptions import ValidationError
-from rest_framework.fields import CurrentUserDefault
-from rest_framework.relations import PrimaryKeyRelatedField
-
-from api.exceptions import SubscriptionError
-from api.utils import proccess_custom_context, proccess_recipe_ingredients_data
 from recipes.models import (
     Favorite,
     Ingredient,
@@ -20,7 +13,14 @@ from recipes.models import (
     ShoppingCart,
     Tag,
 )
+from rest_framework import serializers, status
+from rest_framework.exceptions import ValidationError
+from rest_framework.fields import CurrentUserDefault
+from rest_framework.relations import PrimaryKeyRelatedField
 from users.models import Me, SetPassword, Subscription, User
+
+from api.exceptions import SubscriptionError
+from api.utils import proccess_custom_context, proccess_recipe_ingredients_data
 
 
 class TagSerializer(serializers.ModelSerializer):
@@ -99,7 +99,9 @@ class RecipeReadSerializer(serializers.ModelSerializer):
     is_favorited = serializers.SerializerMethodField()
     is_in_shopping_cart = serializers.SerializerMethodField()
     author = UserRecipeReadSerializer(read_only=True)
-    ingredients = IngredientRecipeSerializer(many=True, source='RecipeIngredients')
+    ingredients = IngredientRecipeSerializer(
+        many=True, source='RecipeIngredients'
+    )
 
     class Meta:
         model = Recipe

@@ -37,8 +37,10 @@ def proccess_custom_context(
             return True
     return False
 
+
 def get_model_instance(app_name, model_name):
     return apps.get_model(f"{app_name}.{model_name}")
+
 
 def proccess_recipe_ingredients_data(self, instance):
     context = self.context['request']
@@ -59,22 +61,37 @@ def proccess_recipe_ingredients_data(self, instance):
         )
     IngredientRecipe.objects.bulk_create(recipes_ingredients_bulkcreate)
 
-def process_perform_create(self, serializer, model, modelfield_first, modelfield_second):
+
+def process_perform_create(
+    self, serializer, model, modelfield_first, modelfield_second
+):
     modelfield_second_value = get_object_or_404(
         model, id=self.kwargs.get("recipe_id")
     )
     serializer.save(
-        **{modelfield_first: self.request.user, modelfield_second: modelfield_second_value}
+        **{
+            modelfield_first: self.request.user,
+            modelfield_second: modelfield_second_value,
+        }
     )
 
 
-def proccess_delete(self, model_first_field, model_for_deletion, modelfield_first, modelfield_second):
+def proccess_delete(
+    self,
+    model_first_field,
+    model_for_deletion,
+    modelfield_first,
+    modelfield_second,
+):
     modelfield_second_value = get_object_or_404(
         model_first_field, id=self.kwargs.get("recipe_id")
     )
     instance_for_deletion = get_object_or_404(
         model_for_deletion,
-        **{modelfield_first: self.request.user, modelfield_second: modelfield_second_value}
+        **{
+            modelfield_first: self.request.user,
+            modelfield_second: modelfield_second_value,
+        },
     )
     instance_for_deletion.delete()
     return Response(

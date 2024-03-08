@@ -1,42 +1,62 @@
 import io
 
-from django.db.models import Sum, FloatField
+from django.db.models import FloatField, Sum
 from django.db.models.functions import Cast
 from django.http import FileResponse, Http404
 from django.shortcuts import get_object_or_404
 from django_filters.rest_framework import DjangoFilterBackend
-
+from foodgram import settings
+from foodgram.permission import OwnerOrReadOnly
+from recipes.models import (
+    Favorite,
+    Ingredient,
+    IngredientRecipe,
+    Recipe,
+    ShoppingCart,
+    Tag,
+)
 from reportlab.lib.units import inch
 from reportlab.pdfbase import pdfmetrics
 from reportlab.pdfbase.ttfonts import TTFont
 from reportlab.pdfgen import canvas
 from rest_framework import status
 from rest_framework.filters import SearchFilter
-from rest_framework.mixins import (CreateModelMixin, DestroyModelMixin,
-                                   ListModelMixin, RetrieveModelMixin,
-                                   UpdateModelMixin)
+from rest_framework.mixins import (
+    CreateModelMixin,
+    DestroyModelMixin,
+    ListModelMixin,
+    RetrieveModelMixin,
+    UpdateModelMixin,
+)
 from rest_framework.permissions import AllowAny, IsAuthenticated
 from rest_framework.response import Response
 from rest_framework.views import APIView
-from rest_framework.viewsets import GenericViewSet, ReadOnlyModelViewSet, ModelViewSet
-
-from api.serializers import (FavoriteDeleteSerializer, FavoriteSerializer,
-                             IngredientSerializer, MeReadSerializer,
-                             RecipeCreateUpdateSerializer, RecipeReadSerializer,
-                             SetPasswordSerializer,
-                             ShoppingCartDeleteSerializer,
-                             ShoppingCartSerializer,
-                             SubscriptionDeleteSerializer,
-                             SubscriptionSerializer, SubscriptionsSerializer,
-                             TagSerializer, UserCreateSerializer,
-                             UserReadSerializer)
-from api.filters import RecipeFilter
-from api.utils import process_perform_create, proccess_delete
-from foodgram import settings
-from foodgram.permission import OwnerOrReadOnly
-from recipes.models import (Favorite, Ingredient, IngredientRecipe, Recipe,
-                            ShoppingCart, Tag)
+from rest_framework.viewsets import (
+    GenericViewSet,
+    ModelViewSet,
+    ReadOnlyModelViewSet,
+)
 from users.models import Me, SetPassword, Subscription, User
+
+from api.filters import RecipeFilter
+from api.serializers import (
+    FavoriteDeleteSerializer,
+    FavoriteSerializer,
+    IngredientSerializer,
+    MeReadSerializer,
+    RecipeCreateUpdateSerializer,
+    RecipeReadSerializer,
+    SetPasswordSerializer,
+    ShoppingCartDeleteSerializer,
+    ShoppingCartSerializer,
+    SubscriptionDeleteSerializer,
+    SubscriptionSerializer,
+    SubscriptionsSerializer,
+    TagSerializer,
+    UserCreateSerializer,
+    UserReadSerializer,
+)
+from api.utils import proccess_delete, process_perform_create
 
 
 class TagViewSet(ModelViewSet):
@@ -98,15 +118,20 @@ class FavoriteViewSet(CreateModelMixin, DestroyModelMixin, GenericViewSet):
 
     def perform_create(self, serializer):
         process_perform_create(
-            self=self, serializer=serializer,
-            model=Recipe, modelfield_first='favorited_user',
-            modelfield_second='favorited_recipe')
+            self=self,
+            serializer=serializer,
+            model=Recipe,
+            modelfield_first='favorited_user',
+            modelfield_second='favorited_recipe',
+        )
 
     def delete(self, request, *args, **kwargs):
         return proccess_delete(
-         self=self, model_first_field=Recipe,
-         model_for_deletion=Favorite, modelfield_first='favorited_user',
-         modelfield_second='favorited_recipe'
+            self=self,
+            model_first_field=Recipe,
+            model_for_deletion=Favorite,
+            modelfield_first='favorited_user',
+            modelfield_second='favorited_recipe',
         )
 
 
@@ -128,15 +153,20 @@ class ShoppingCartViewSet(CreateModelMixin, DestroyModelMixin, GenericViewSet):
 
     def perform_create(self, serializer):
         process_perform_create(
-            self=self, serializer=serializer,
-            model=Recipe, modelfield_first='shoppingcart_user',
-            modelfield_second='shoppingcart_recipe')
+            self=self,
+            serializer=serializer,
+            model=Recipe,
+            modelfield_first='shoppingcart_user',
+            modelfield_second='shoppingcart_recipe',
+        )
 
     def delete(self, request, *args, **kwargs):
         return proccess_delete(
-            self=self, model_first_field=Recipe,
-            model_for_deletion=ShoppingCart, modelfield_first='shoppingcart_user',
-            modelfield_second='shoppingcart_recipe'
+            self=self,
+            model_first_field=Recipe,
+            model_for_deletion=ShoppingCart,
+            modelfield_first='shoppingcart_user',
+            modelfield_second='shoppingcart_recipe',
         )
 
 
@@ -148,14 +178,24 @@ class ShoppingCartDownloadView(APIView):
 
     def download_shoppingcart(self, request, user):
         shoppingcart_ingredients_list = []
-        recipe_ingredient_amount_queryset = IngredientRecipe.objects.filter(
-            recipe__shoppingcart_recipe__shoppingcart_user=user
-        ).values(
-            'ingredient__name', 'ingredient__measurement_unit'
-        ).annotate(amounts=Sum(Cast('amount__amount', FloatField()), distinct=True)).order_by('amounts')
+        recipe_ingredient_amount_queryset = (
+            IngredientRecipe.objects.filter(
+                recipe__shoppingcart_recipe__shoppingcart_user=user
+            )
+            .values('ingredient__name', 'ingredient__measurement_unit')
+            .annotate(
+                amounts=Sum(
+                    Cast('amount__amount', FloatField()), distinct=True
+                )
+            )
+            .order_by('amounts')
+        )
 
         for item in recipe_ingredient_amount_queryset:
-            shoppingcart_ingredients_list.append(f'{item["ingredient__name"]} - {item["amounts"]} {item["ingredient__measurement_unit"]}')
+            shoppingcart_ingredients_list.append(
+                f'{item["ingredient__name"]}'
+                f' - {item["amounts"]} {item["ingredient__measurement_unit"]}'
+            )
 
         pdfmetrics.registerFont(
             TTFont(
@@ -171,10 +211,14 @@ class ShoppingCartDownloadView(APIView):
         y = 800
         for i in range(0, len(shoppingcart_ingredients_list)):
             if i == 0:
-                p.drawCentredString(4.25 * inch, y, shoppingcart_ingredients_list[i])
+                p.drawCentredString(
+                    4.25 * inch, y, shoppingcart_ingredients_list[i]
+                )
                 y -= 60
             else:
-                p.drawCentredString(4.25 * inch, y, shoppingcart_ingredients_list[i])
+                p.drawCentredString(
+                    4.25 * inch, y, shoppingcart_ingredients_list[i]
+                )
                 y -= 60
         p.showPage()
         p.save()
