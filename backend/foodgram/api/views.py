@@ -1,5 +1,7 @@
 import io
 
+from django.db.models import Sum, FloatField
+from django.db.models.functions import Cast
 from django.http import FileResponse, Http404
 from django.shortcuts import get_object_or_404
 from django_filters.rest_framework import DjangoFilterBackend
@@ -145,34 +147,15 @@ class ShoppingCartDownloadView(APIView):
         return self.download_shoppingcart(request, request.user)
 
     def download_shoppingcart(self, request, user):
+        shoppingcart_ingredients_list = []
+        recipe_ingredient_amount_queryset = IngredientRecipe.objects.filter(
+            recipe__shoppingcart_recipe__shoppingcart_user=user
+        ).values(
+            'ingredient__name', 'ingredient__measurement_unit'
+        ).annotate(amounts=Sum(Cast('amount__amount', FloatField()), distinct=True)).order_by('amounts')
 
-        ingredients_set = set({})
-        string_list = []
-
-        recipes_list = []
-        for shopping_cart in ShoppingCart.objects.filter(
-            shoppingcart_user=user
-        ):
-            recipes_list.append(shopping_cart.shoppingcart_recipe)
-
-        for shoppingcart_recipe in recipes_list:
-            for ingredient_recipe in IngredientRecipe.objects.filter(
-                recipe=shoppingcart_recipe
-            ):
-                ingredients_set.add(ingredient_recipe.ingredient.id)
-
-        for ingredient in ingredients_set:
-            amount = 0
-            for ingredient_recipe_item in IngredientRecipe.objects.filter(
-                recipe__shoppingcart_recipe__shoppingcart_user=user,
-                ingredient_id=ingredient,
-            ):
-                amount += int(ingredient_recipe_item.amount.amount)
-            name = Ingredient.objects.get(id=ingredient).name
-            measurement_unit = Ingredient.objects.get(
-                id=ingredient
-            ).measurement_unit
-            string_list.append(f'{name} - {amount} {measurement_unit}')
+        for item in recipe_ingredient_amount_queryset:
+            shoppingcart_ingredients_list.append(f'{item["ingredient__name"]} - {item["amounts"]} {item["ingredient__measurement_unit"]}')
 
         pdfmetrics.registerFont(
             TTFont(
@@ -186,12 +169,12 @@ class ShoppingCartDownloadView(APIView):
         p.setFont("FreeSans", 12)
 
         y = 800
-        for i in range(0, len(string_list)):
+        for i in range(0, len(shoppingcart_ingredients_list)):
             if i == 0:
-                p.drawCentredString(4.25 * inch, y, string_list[i])
+                p.drawCentredString(4.25 * inch, y, shoppingcart_ingredients_list[i])
                 y -= 60
             else:
-                p.drawCentredString(4.25 * inch, y, string_list[i])
+                p.drawCentredString(4.25 * inch, y, shoppingcart_ingredients_list[i])
                 y -= 60
         p.showPage()
         p.save()

@@ -56,6 +56,10 @@ class User(AbstractBaseUser, PermissionsMixin):
         else:
             raise BadRequest('inserted_old_password_doesnt_match_old_password')
 
+    class Meta:
+        verbose_name = 'Пользователь'
+        verbose_name_plural = 'Пользователи'
+
     def __str__(self):
         return self.email
 
@@ -76,6 +80,8 @@ class Me(User):
         pass
 
     class Meta:
+        verbose_name = 'Профиль пользователя'
+        verbose_name_plural = 'Профили пользователя'
         proxy = True
 
 
@@ -98,6 +104,10 @@ class SetPassword(models.Model):
     ):
         self.user.set_new_password(self.current_password, self.new_password)
 
+    class Meta:
+        verbose_name = 'Модель для изменения пароля'
+        verbose_name_plural = 'Модели для изменения пароля'
+
 
 class Subscription(models.Model):
     subscribed_to = models.ForeignKey(
@@ -108,6 +118,8 @@ class Subscription(models.Model):
     )
 
     class Meta:
+        verbose_name = 'Подписка'
+        verbose_name_plural = 'Подписки'
         constraints = [
             models.UniqueConstraint(
                 fields=['subscribed_to', 'subscriber'],
@@ -119,5 +131,3 @@ class Subscription(models.Model):
             ),
         ]
 
-
-#
