@@ -1,5 +1,6 @@
 from django.urls import include, path, re_path
 from rest_framework.routers import DefaultRouter
+from djoser import views
 
 from api.views import (
     FavoriteViewSet,
@@ -30,7 +31,7 @@ router.register(
     basename='shoppingcarts',
 )
 router.register('users/me', MeViewSet)
-router.register('users/set_password', SetPasswordViewSet)
+# router.register('users/set_password', SetPasswordViewSet)
 router.register('users/subscriptions', SubscriptionsViewSet)
 router.register('users', UserViewSet)
 router.register(
@@ -47,5 +48,6 @@ urlpatterns = [
         ShoppingCartDownloadView.as_view(),
         name='download_shopping_cart',
     ),
+    path('users/set_password/', views.UserViewSet.as_view({"post": "set_password"}), name="set_password"),
     path('', include(router.urls)),
 ]
