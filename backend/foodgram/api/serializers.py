@@ -17,7 +17,7 @@ from rest_framework import serializers, status
 from rest_framework.exceptions import ValidationError
 from rest_framework.fields import CurrentUserDefault
 from rest_framework.relations import PrimaryKeyRelatedField
-from users.models import Me, SetPassword, Subscription, User
+from users.models import Subscription, User
 
 from api.exceptions import SubscriptionError
 from api.utils import proccess_custom_context, proccess_recipe_ingredients_data
@@ -331,7 +331,7 @@ class MeReadSerializer(serializers.ModelSerializer):
     is_subscribed = serializers.SerializerMethodField()
 
     class Meta:
-        model = Me
+        model = User
         fields = (
             'first_name',
             'last_name',
@@ -349,38 +349,6 @@ class MeReadSerializer(serializers.ModelSerializer):
         ).exists():
             return True
         return False
-
-
-class SetPasswordSerializer(serializers.ModelSerializer):
-    # при попытке переопределить функционал на
-    # дефолтный set_password из djoser
-    # возникли большие проблемы с переопределением роутов,
-    # поэтому оставил кастомный функционал
-    user = serializers.HiddenField(default=CurrentUserDefault())
-    created = serializers.HiddenField(default=timezone.now)
-    current_password = serializers.CharField(
-        write_only=True, style={'input_type': 'current_password'}
-    )
-    new_password = serializers.CharField(
-        write_only=True, style={'input_type': 'new_password'}
-    )
-
-    def create(self, validated_data):
-        try:
-            return super().create(validated_data)
-        except BadRequest as e:
-            raise Http404(e)
-
-    class Meta:
-        model = SetPassword
-        fields = (
-            'user',
-            'created',
-            'current_password',
-            'new_password',
-        )
-        read_only_fields = fields
-        depth = 1
 
 
 class SubscriptionSerializer(serializers.ModelSerializer):

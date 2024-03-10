@@ -2,7 +2,7 @@ import io
 
 from django.db.models import FloatField, Sum
 from django.db.models.functions import Cast
-from django.http import FileResponse, Http404
+from django.http import FileResponse
 from django.shortcuts import get_object_or_404
 from django_filters.rest_framework import DjangoFilterBackend
 from foodgram import settings
@@ -36,7 +36,7 @@ from rest_framework.viewsets import (
     ModelViewSet,
     ReadOnlyModelViewSet,
 )
-from users.models import Me, SetPassword, Subscription, User
+from users.models import Subscription, User
 
 from api.filters import RecipeFilter
 from api.serializers import (
@@ -46,7 +46,6 @@ from api.serializers import (
     MeReadSerializer,
     RecipeCreateUpdateSerializer,
     RecipeReadSerializer,
-    SetPasswordSerializer,
     ShoppingCartDeleteSerializer,
     ShoppingCartSerializer,
     SubscriptionDeleteSerializer,
@@ -255,7 +254,7 @@ class UserViewSet(CreateModelMixin, ReadOnlyModelViewSet):
 
 
 class MeViewSet(ListModelMixin, GenericViewSet):
-    queryset = Me.objects.all()
+    queryset = User.objects.all()
     serializer_class = MeReadSerializer
     permission_classes = (IsAuthenticated,)
     throttle_scope = None
@@ -263,32 +262,11 @@ class MeViewSet(ListModelMixin, GenericViewSet):
 
     def get_queryset(self):
         user_id = self.request.user.id
-        return Me.objects.filter(id=user_id)
+        return User.objects.filter(id=user_id)
 
     def list(self, request, *args, **kwargs):
         serializer = MeReadSerializer(self.get_queryset(), many=True)
         return Response(serializer.data[0])
-
-
-class SetPasswordViewSet(CreateModelMixin, GenericViewSet):
-    queryset = SetPassword.objects.all()
-    serializer_class = SetPasswordSerializer
-    permission_classes = (IsAuthenticated,)
-    throttle_scope = None
-    pagination_class = None
-
-    def create(self, request, *args, **kwargs):
-        try:
-            super().create(request, *args, **kwargs)
-            return Response(
-                {'success': 'Пароль успешно изменен.'},
-                status=status.HTTP_204_NO_CONTENT,
-            )
-        except Http404:
-            return Response(
-                {'errors': 'Введен неверный существующий пароль.'},
-                status=status.HTTP_400_BAD_REQUEST,
-            )
 
 
 class SubscriptionViewSet(CreateModelMixin, DestroyModelMixin, GenericViewSet):

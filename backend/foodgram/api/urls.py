@@ -7,7 +7,6 @@ from api.views import (
     IngredientViewSet,
     MeViewSet,
     RecipeViewSet,
-    SetPasswordViewSet,
     ShoppingCartDownloadView,
     ShoppingCartViewSet,
     SubscriptionsViewSet,
@@ -31,7 +30,6 @@ router.register(
     basename='shoppingcarts',
 )
 router.register('users/me', MeViewSet)
-# router.register('users/set_password', SetPasswordViewSet)
 router.register('users/subscriptions', SubscriptionsViewSet)
 router.register('users', UserViewSet)
 router.register(
