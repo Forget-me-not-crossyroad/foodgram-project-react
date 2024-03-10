@@ -5,10 +5,6 @@ from django.utils.deconstruct import deconstructible
 from users.models import User
 
 
-# аннотация необходима для использования
-# дефолтного знаачения при создании,
-# иначе - ошибка
-@deconstructible
 class Tag(models.Model):
     BLACK = '000000'
     ORANGE = 'e26e24'
@@ -43,14 +39,6 @@ class Tag(models.Model):
         help_text='Поле выбора цвета',
     )
 
-    @classmethod
-    def get_default_tag(cls):
-        obj, created = cls.objects.get_or_create(
-            name='Полдник',
-            slug='afternoon_tea',
-        )
-        return obj
-
     class Meta:
         verbose_name = 'Тэг'
         verbose_name_plural = 'Тэги'
@@ -71,13 +59,6 @@ class Ingredient(models.Model):
         verbose_name='Единица измерения',
         help_text='Название единицу измерения, не более 200 символов',
     )
-
-    @classmethod
-    def get_default_pk(cls):
-        obj, created = cls.objects.get_or_create(
-            name='сахар', measurement_unit='г'
-        )
-        return obj.pk
 
     class Meta:
         verbose_name = 'Ингредиент'
@@ -130,13 +111,11 @@ class Recipe(models.Model):
         verbose_name='Ингредиент',
         help_text='Поле связи с моделью ингредиента',
         through='IngredientRecipe',
-        default=Ingredient.get_default_pk(),
     )
     tags = models.ManyToManyField(
         Tag,
         verbose_name='Поле связи с моделью тега',
         help_text='Укажите тег',
-        default=Tag.get_default_tag(),
     )
 
     class Meta:
@@ -153,10 +132,6 @@ class Recipe(models.Model):
         return self.name
 
 
-# аннотация необходима для использования
-# дефолтного знаачения при создании,
-# иначе - ошибка
-@deconstructible
 class IngredientAmountRecipe(models.Model):
     amount = models.CharField(
         help_text='Введите количество',
@@ -167,11 +142,6 @@ class IngredientAmountRecipe(models.Model):
         max_length=150,
         default=1,
     )
-
-    @classmethod
-    def get_default_amount(cls):
-        obj, created = cls.objects.get_or_create(amount=1)
-        return obj
 
     class Meta:
         verbose_name = 'Модель для хранения amount'
