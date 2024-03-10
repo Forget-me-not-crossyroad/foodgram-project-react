@@ -62,7 +62,7 @@ jobs:
         host: ${{ secrets.HOST }}
         username: ${{ secrets.USER }}
         key: ${{ secrets.SSH_KEY }}
-        passphrase: ${{ secrets.PASSPHRASE }} # Добавлен secret в actions.
+        passphrase: ${{ secrets.SSH_PASSPHRASE }} # Добавлен secret в actions.
         script: |
           # Выполняет pull образа с DockerHub
           cd ~/foodgram-project-react/infra/
