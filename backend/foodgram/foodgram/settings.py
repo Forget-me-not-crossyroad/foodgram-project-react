@@ -30,7 +30,16 @@ SECRET_KEY = os.getenv('SECRET_KEY', default='SECRET')
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = os.getenv('DEBUG_MODE', default=True)
 
-ALLOWED_HOSTS = os.getenv('ALLOWED_HOSTS', default='127.0.0.1, localhost').split()
+# ALLOWED_HOSTS = os.getenv('ALLOWED_HOSTS', default='127.0.0.1, localhost').split()
+
+ALLOWED_HOSTS = [
+    '127.0.0.1',
+    'web',
+    '*',
+    'localhost',
+    'app-foodgram.3utilities.com',
+    '158.160.83.92',
+]
 
 CSRF_TRUSTED_ORIGINS = [
     'https://*.158.160.83.92',
