@@ -32,6 +32,7 @@ SECRET_KEY = 'django-insecure-_vdop+zbenbi^5&@cw8ub@gh*dp^dusml8ys#$+x0il5iihz4@
 # DEBUG = os.getenv('DEBUG_MODE', default=True)
 DEBUG = True
 
+# test
 # ALLOWED_HOSTS = os.getenv('ALLOWED_HOSTS', default='127.0.0.1, localhost').split()
 
 ALLOWED_HOSTS = [
