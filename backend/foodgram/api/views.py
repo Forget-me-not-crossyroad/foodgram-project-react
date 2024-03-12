@@ -1,6 +1,6 @@
 import io
 
-from django.db.models import FloatField, Sum
+from django.db.models import FloatField, Sum, IntegerField
 from django.db.models.functions import Cast
 from django.http import FileResponse
 from django.shortcuts import get_object_or_404
@@ -181,10 +181,10 @@ class ShoppingCartDownloadView(APIView):
             IngredientRecipe.objects.filter(
                 recipe__shoppingcart_recipe__shoppingcart_user=user
             )
-            .values('ingredient__name', 'ingredient__measurement_unit')
+            .values('ingredient__name', 'ingredient__measurement_unit').distinct()
             .annotate(
                 amounts=Sum(
-                    Cast('amount__amount', FloatField()), distinct=True
+                    Cast('amount', IntegerField())
                 )
             )
             .order_by('amounts')

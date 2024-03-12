@@ -61,6 +61,21 @@ def proccess_recipe_ingredients_data(self, instance):
         )
     IngredientRecipe.objects.bulk_create(recipes_ingredients_bulkcreate)
 
+def proccess_recipe_ingredients_data_refactor(self, instance):
+    context = self.context['request']
+    ingredients = context.data['ingredients']
+    recipes_ingredients_bulkcreate = []
+    for ingredient in ingredients:
+        ingredient_for_recipe_id = ingredient['id']
+        amount_for_recipe = ingredient['amount']
+        recipes_ingredients_bulkcreate.append(
+            IngredientRecipe(
+                recipe=instance,
+                amount=amount_for_recipe,
+                ingredient_id=ingredient_for_recipe_id,
+            )
+        )
+    IngredientRecipe.objects.bulk_create(recipes_ingredients_bulkcreate)
 
 def process_perform_create(
     self, serializer, model, modelfield_first, modelfield_second

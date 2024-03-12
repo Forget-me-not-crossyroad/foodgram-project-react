@@ -20,7 +20,7 @@ from rest_framework.relations import PrimaryKeyRelatedField
 from users.models import Subscription, User
 
 from api.exceptions import SubscriptionError
-from api.utils import proccess_custom_context, proccess_recipe_ingredients_data
+from api.utils import proccess_custom_context, proccess_recipe_ingredients_data_refactor
 
 
 class TagSerializer(serializers.ModelSerializer):
@@ -59,7 +59,6 @@ class IngredientRecipeSerializer(serializers.ModelSerializer):
     measurement_unit = serializers.CharField(
         source='ingredient.measurement_unit'
     )
-    amount = serializers.IntegerField(source='amount.amount')
 
     class Meta:
         model = IngredientRecipe
@@ -191,14 +190,14 @@ class RecipeCreateUpdateSerializer(serializers.ModelSerializer):
     def create(self, validated_data):
         tags = validated_data.pop('tags')
         recipe = Recipe.objects.create(**validated_data)
-        proccess_recipe_ingredients_data(self, recipe)
+        proccess_recipe_ingredients_data_refactor(self, recipe)
         recipe.tags.set(tags)
         return recipe
 
     def update(self, instance, validated_data):
         if not self.context['request'].data['ingredients'] is None:
             instance.ingredients.clear()
-            proccess_recipe_ingredients_data(self, instance)
+            proccess_recipe_ingredients_data_refactor(self, instance)
         if not validated_data.get('tags') is None:
             instance.tags.clear()
             tags = validated_data.pop('tags')

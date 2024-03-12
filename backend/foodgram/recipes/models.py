@@ -166,12 +166,11 @@ class IngredientRecipe(models.Model):
         on_delete=models.CASCADE,
         related_name='RecipeIngredients',
     )
-    amount = models.ForeignKey(
-        'IngredientAmountRecipe',
+    amount = models.CharField(
         verbose_name='Количество ингредиента',
         help_text='Добавьте количество ингредиента',
-        on_delete=models.CASCADE,
-        related_name='RecipeIngredients',
+        max_length=150,
+        default=1,
     )
 
     class Meta:
