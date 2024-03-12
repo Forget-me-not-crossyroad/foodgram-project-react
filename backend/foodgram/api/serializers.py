@@ -160,30 +160,27 @@ class RecipeCreateUpdateSerializer(serializers.ModelSerializer):
         depth = 1
 
     def validate_tags(self, value):
-        tags = value
-        if not tags:
+        if not value:
             raise ValidationError({'tags': 'Отсутвует тег'})
         tags_list = []
-        for tag in tags:
+        for tag in value:
             if tag in tags_list:
                 raise ValidationError({'tags': 'Теги дублируются'})
             tags_list.append(tag)
         return value
 
     def validate_ingredients(self, value):
-        ingredients = value
-        if not ingredients:
+        if not value:
             raise ValidationError({'ingredients': 'Выберите ингредиенты'})
         ingredients_list = []
-        for item in ingredients:
-            ingredient = get_object_or_404(Ingredient, name=item['id'])
-            if ingredient in ingredients_list:
+        for item in value:
+            if item in ingredients_list:
                 raise ValidationError(
                     {'ingredients': 'Ингридиенты дублируются'}
                 )
             if int(item['amount']) <= 0:
                 raise ValidationError({'amount': 'Выберите число большее 0'})
-            ingredients_list.append(ingredient)
+            ingredients_list.append(item)
         return value
 
     def create(self, validated_data):
@@ -194,13 +191,10 @@ class RecipeCreateUpdateSerializer(serializers.ModelSerializer):
         return recipe
 
     def update(self, instance, validated_data):
-        if not self.context['request'].data['ingredients'] is None:
-            instance.ingredients.clear()
-            proccess_recipe_ingredients_data_refactor(self, instance)
-        if not validated_data.get('tags') is None:
-            instance.tags.clear()
-            tags = validated_data.pop('tags')
-            instance.tags.set(tags)
+        instance.ingredients.clear()
+        proccess_recipe_ingredients_data_refactor(self, instance)
+        tags = validated_data.pop('tags')
+        instance.tags.set(tags)
         return super().update(instance, validated_data)
 
 
