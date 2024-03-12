@@ -1,9 +1,15 @@
-from django.core.exceptions import BadRequest
 from django.db import IntegrityError
-from django.http import Http404
 from django.shortcuts import get_object_or_404
 from django.utils import timezone
 from drf_extra_fields.fields import Base64ImageField
+
+from rest_framework import serializers, status
+from rest_framework.exceptions import ValidationError
+from rest_framework.fields import CurrentUserDefault
+from rest_framework.relations import PrimaryKeyRelatedField
+
+from api.exceptions import SubscriptionError
+from api.utils import proccess_custom_context, proccess_recipe_ingredients_data_refactor
 from recipes.models import (
     Favorite,
     Ingredient,
@@ -13,14 +19,7 @@ from recipes.models import (
     ShoppingCart,
     Tag,
 )
-from rest_framework import serializers, status
-from rest_framework.exceptions import ValidationError
-from rest_framework.fields import CurrentUserDefault
-from rest_framework.relations import PrimaryKeyRelatedField
 from users.models import Subscription, User
-
-from api.exceptions import SubscriptionError
-from api.utils import proccess_custom_context, proccess_recipe_ingredients_data_refactor
 
 
 class TagSerializer(serializers.ModelSerializer):

@@ -1,20 +1,11 @@
 import io
 
-from django.db.models import FloatField, Sum, IntegerField
+from django.db.models import Sum, IntegerField
 from django.db.models.functions import Cast
 from django.http import FileResponse
 from django.shortcuts import get_object_or_404
 from django_filters.rest_framework import DjangoFilterBackend
-from foodgram import settings
-from foodgram.permission import OwnerOrReadOnly
-from recipes.models import (
-    Favorite,
-    Ingredient,
-    IngredientRecipe,
-    Recipe,
-    ShoppingCart,
-    Tag,
-)
+
 from reportlab.lib.units import inch
 from reportlab.pdfbase import pdfmetrics
 from reportlab.pdfbase.ttfonts import TTFont
@@ -36,8 +27,18 @@ from rest_framework.viewsets import (
     ModelViewSet,
     ReadOnlyModelViewSet,
 )
-from users.models import Subscription, User
 
+from users.models import Subscription, User
+from foodgram import settings
+from foodgram.permission import OwnerOrReadOnly
+from recipes.models import (
+    Favorite,
+    Ingredient,
+    IngredientRecipe,
+    Recipe,
+    ShoppingCart,
+    Tag,
+)
 from api.filters import RecipeFilter
 from api.serializers import (
     FavoriteDeleteSerializer,
