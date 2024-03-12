@@ -5,13 +5,11 @@ from django.db.models.functions import Cast
 from django.http import FileResponse
 from django.shortcuts import get_object_or_404
 from django_filters.rest_framework import DjangoFilterBackend
-
 from reportlab.lib.units import inch
 from reportlab.pdfbase import pdfmetrics
 from reportlab.pdfbase.ttfonts import TTFont
 from reportlab.pdfgen import canvas
 from rest_framework import status
-from rest_framework.filters import SearchFilter
 from rest_framework.mixins import (
     CreateModelMixin,
     DestroyModelMixin,
@@ -39,7 +37,7 @@ from recipes.models import (
     ShoppingCart,
     Tag,
 )
-from api.filters import RecipeFilter
+from api.filters import RecipeFilter, IngredientFilter
 from api.serializers import (
     FavoriteDeleteSerializer,
     FavoriteSerializer,
@@ -56,7 +54,7 @@ from api.serializers import (
     UserCreateSerializer,
     UserReadSerializer,
 )
-from api.utils import proccess_delete, process_perform_create
+from api.utils import process_delete, process_perform_create
 
 
 class TagViewSet(ModelViewSet):
@@ -68,16 +66,13 @@ class TagViewSet(ModelViewSet):
 
 
 class IngredientViewSet(ModelViewSet):
-    # фильтр работает, ингредиенты
-    # ищутся по частичному совпадению
-    SearchFilter.search_param = 'name'
     queryset = Ingredient.objects.all()
     serializer_class = IngredientSerializer
     permission_classes = (AllowAny,)
     throttle_scope = None
     pagination_class = None
-    filter_backends = (SearchFilter,)
-    search_fields = ['name']
+    filter_backends = (IngredientFilter,)
+    search_fields = ['^name']
 
 
 class RecipeViewSet(
@@ -126,7 +121,7 @@ class FavoriteViewSet(CreateModelMixin, DestroyModelMixin, GenericViewSet):
         )
 
     def delete(self, request, *args, **kwargs):
-        return proccess_delete(
+        return process_delete(
             self=self,
             model_first_field=Recipe,
             model_for_deletion=Favorite,
@@ -160,7 +155,7 @@ class ShoppingCartViewSet(CreateModelMixin, DestroyModelMixin, GenericViewSet):
         )
 
     def delete(self, request, *args, **kwargs):
-        return proccess_delete(
+        return process_delete(
             self=self,
             model_first_field=Recipe,
             model_for_deletion=ShoppingCart,

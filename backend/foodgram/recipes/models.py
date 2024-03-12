@@ -131,25 +131,6 @@ class Recipe(models.Model):
         return self.name
 
 
-class IngredientAmountRecipe(models.Model):
-    amount = models.CharField(
-        help_text='Введите количество',
-        validators=[
-            MinValueValidator(2, 'Минимальное количество ингредиента - 2')
-        ],
-        verbose_name='Количество',
-        max_length=150,
-        default=1,
-    )
-
-    class Meta:
-        verbose_name = 'Модель для хранения amount'
-        verbose_name_plural = 'Модели для хранения amount'
-
-    def __str__(self):
-        return self.amount
-
-
 class IngredientRecipe(models.Model):
     ingredient = models.ForeignKey(
         Ingredient,

@@ -1,7 +1,6 @@
 from django.db import IntegrityError
 from django.utils import timezone
 from drf_extra_fields.fields import Base64ImageField
-
 from rest_framework import serializers, status
 from rest_framework.exceptions import ValidationError
 from rest_framework.fields import CurrentUserDefault
@@ -9,13 +8,12 @@ from rest_framework.relations import PrimaryKeyRelatedField
 
 from api.exceptions import SubscriptionError
 from api.utils import (
-    proccess_custom_context,
-    proccess_recipe_ingredients_data_refactor,
+    process_custom_context,
+    process_recipe_ingredients_data,
 )
 from recipes.models import (
     Favorite,
     Ingredient,
-    IngredientAmountRecipe,
     IngredientRecipe,
     Recipe,
     ShoppingCart,
@@ -39,18 +37,6 @@ class IngredientSerializer(serializers.ModelSerializer):
             'id',
             'name',
             'measurement_unit',
-        )
-
-
-class IngredientAmountRecipeSerializer(serializers.ModelSerializer):
-    id = serializers.PrimaryKeyRelatedField(queryset=Ingredient.objects.all())
-    amount = serializers.IntegerField()
-
-    class Meta:
-        model = IngredientAmountRecipe
-        fields = (
-            'id',
-            'amount',
         )
 
 
@@ -83,7 +69,7 @@ class UserRecipeReadSerializer(serializers.ModelSerializer):
         depth = 1
 
     def get_is_subscribed(self, obj):
-        return proccess_custom_context(
+        return process_custom_context(
             instance=obj,
             modelfield_first='subscribed_to',
             modelfield_second='subscriber',
@@ -121,7 +107,7 @@ class RecipeReadSerializer(serializers.ModelSerializer):
         depth = 1
 
     def get_is_favorited(self, obj):
-        return proccess_custom_context(
+        return process_custom_context(
             instance=obj,
             modelfield_first='favorited_recipe',
             modelfield_second='favorited_user',
@@ -131,7 +117,7 @@ class RecipeReadSerializer(serializers.ModelSerializer):
         )
 
     def get_is_in_shopping_cart(self, obj):
-        return proccess_custom_context(
+        return process_custom_context(
             instance=obj,
             modelfield_first='shoppingcart_recipe',
             modelfield_second='shoppingcart_user',
@@ -188,13 +174,13 @@ class RecipeCreateUpdateSerializer(serializers.ModelSerializer):
     def create(self, validated_data):
         tags = validated_data.pop('tags')
         recipe = Recipe.objects.create(**validated_data)
-        proccess_recipe_ingredients_data_refactor(self, recipe)
+        process_recipe_ingredients_data(self, recipe)
         recipe.tags.set(tags)
         return recipe
 
     def update(self, instance, validated_data):
         instance.ingredients.clear()
-        proccess_recipe_ingredients_data_refactor(self, instance)
+        process_recipe_ingredients_data(self, instance)
         tags = validated_data.pop('tags')
         instance.tags.set(tags)
         return super().update(instance, validated_data)
@@ -300,7 +286,7 @@ class UserReadSerializer(serializers.ModelSerializer):
         depth = 1
 
     def get_is_subscribed(self, obj):
-        return proccess_custom_context(
+        return process_custom_context(
             instance=obj,
             modelfield_first='subscribed_to',
             modelfield_second='subscriber',
