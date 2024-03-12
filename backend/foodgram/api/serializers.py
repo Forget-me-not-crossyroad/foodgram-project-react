@@ -1,5 +1,4 @@
 from django.db import IntegrityError
-from django.shortcuts import get_object_or_404
 from django.utils import timezone
 from drf_extra_fields.fields import Base64ImageField
 
@@ -9,7 +8,10 @@ from rest_framework.fields import CurrentUserDefault
 from rest_framework.relations import PrimaryKeyRelatedField
 
 from api.exceptions import SubscriptionError
-from api.utils import proccess_custom_context, proccess_recipe_ingredients_data_refactor
+from api.utils import (
+    proccess_custom_context,
+    proccess_recipe_ingredients_data_refactor,
+)
 from recipes.models import (
     Favorite,
     Ingredient,

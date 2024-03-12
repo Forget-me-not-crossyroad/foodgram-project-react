@@ -181,12 +181,9 @@ class ShoppingCartDownloadView(APIView):
             IngredientRecipe.objects.filter(
                 recipe__shoppingcart_recipe__shoppingcart_user=user
             )
-            .values('ingredient__name', 'ingredient__measurement_unit').distinct()
-            .annotate(
-                amounts=Sum(
-                    Cast('amount', IntegerField())
-                )
-            )
+            .values('ingredient__name', 'ingredient__measurement_unit')
+            .distinct()
+            .annotate(amounts=Sum(Cast('amount', IntegerField())))
             .order_by('amounts')
         )
 

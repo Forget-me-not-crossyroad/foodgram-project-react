@@ -46,6 +46,10 @@ urlpatterns = [
         ShoppingCartDownloadView.as_view(),
         name='download_shopping_cart',
     ),
-    path('users/set_password/', views.UserViewSet.as_view({"post": "set_password"}), name="set_password"),
+    path(
+        'users/set_password/',
+        views.UserViewSet.as_view({"post": "set_password"}),
+        name="set_password",
+    ),
     path('', include(router.urls)),
 ]
