@@ -68,6 +68,8 @@ class TagViewSet(ModelViewSet):
 
 
 class IngredientViewSet(ModelViewSet):
+    # фильтр работает, ингредиенты
+    # ищутся по частичному совпадению
     SearchFilter.search_param = 'name'
     queryset = Ingredient.objects.all()
     serializer_class = IngredientSerializer
@@ -96,8 +98,7 @@ class RecipeViewSet(
     def get_serializer_class(self):
         if self.action in ('list', 'retrieve'):
             return RecipeReadSerializer
-        else:
-            return RecipeCreateUpdateSerializer
+        return RecipeCreateUpdateSerializer
 
 
 class FavoriteViewSet(CreateModelMixin, DestroyModelMixin, GenericViewSet):
@@ -113,8 +114,7 @@ class FavoriteViewSet(CreateModelMixin, DestroyModelMixin, GenericViewSet):
     def get_serializer_class(self):
         if self.action in ('delete',):
             return FavoriteDeleteSerializer
-        else:
-            return FavoriteSerializer
+        return FavoriteSerializer
 
     def perform_create(self, serializer):
         process_perform_create(
@@ -148,8 +148,7 @@ class ShoppingCartViewSet(CreateModelMixin, DestroyModelMixin, GenericViewSet):
     def get_serializer_class(self):
         if self.action in ('delete',):
             return ShoppingCartDeleteSerializer
-        else:
-            return ShoppingCartSerializer
+        return ShoppingCartSerializer
 
     def perform_create(self, serializer):
         process_perform_create(
@@ -237,10 +236,8 @@ class UserViewSet(CreateModelMixin, ReadOnlyModelViewSet):
 
     def get_serializer_class(self):
         if self.action in ('list', 'retrieve'):
-            serializer_class = UserReadSerializer
-        else:
-            serializer_class = UserCreateSerializer
-        return serializer_class
+            return UserReadSerializer
+        return UserCreateSerializer
 
     def retrieve(self, request, *args, **kwargs):
         if not User.objects.filter(id=self.kwargs.get('pk')).exists():
@@ -283,8 +280,7 @@ class SubscriptionViewSet(CreateModelMixin, DestroyModelMixin, GenericViewSet):
     def get_serializer_class(self):
         if self.action in ('delete',):
             return SubscriptionDeleteSerializer
-        else:
-            return SubscriptionSerializer
+        return SubscriptionSerializer
 
     def perform_create(self, serializer):
         subscribed_to = get_object_or_404(User, id=self.kwargs.get("user_id"))
