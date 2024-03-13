@@ -20,5 +20,26 @@ class IngredientAdminPanel(admin.ModelAdmin):
     search_fields = ('name',)
 
 
+class IngredientRecipeAdminPanel(admin.ModelAdmin):
+    list_display = ('id', 'recipe',
+                    'ingredient', 'amount',)
+    list_filter = ('recipe', 'ingredient')
+    search_fields = ('name', 'id')
+
+class FavoriteAdminPanel(admin.ModelAdmin):
+    list_display = ('favorited_user', 'favorited_recipe')
+    list_filter = ('favorited_user', 'favorited_recipe')
+    search_fields = ('favorited_user', 'favorited_recipe')
+
+
+class ShoppingCartAdminPanel(admin.ModelAdmin):
+    list_display = ('shoppingcart_user', 'shoppingcart_recipe')
+    list_filter = ('shoppingcart_user', 'shoppingcart_recipe')
+    search_fields = ('shoppingcart_user', 'shoppingcart_recipe')
+
+
+
+
+
 admin.site.register(Ingredient, IngredientAdminPanel)
 admin.site.register(Tag, TagAdminPanel)
