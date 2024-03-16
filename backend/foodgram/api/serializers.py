@@ -6,7 +6,11 @@ from rest_framework.exceptions import ValidationError
 from rest_framework.fields import CurrentUserDefault
 from rest_framework.relations import PrimaryKeyRelatedField
 
-from api.exceptions import SubscriptionError, IngredientRecipeCreateUpdateError, RecipeCreateUpdateError
+from api.exceptions import (
+    SubscriptionError,
+    IngredientRecipeCreateUpdateError,
+    RecipeCreateUpdateError,
+)
 from api.utils import (
     process_custom_context,
     process_recipe_ingredients_data,
@@ -346,8 +350,7 @@ class UserSubscriptionSerializer(UserReadSerializer):
         if recipes_limit:
             recipes = recipes[:int(recipes_limit)]
         serializer = RecipeReadSerializer(
-            recipes, many=True, read_only=True,
-            context=self.context
+            recipes, many=True, read_only=True, context=self.context
         )
         return serializer.data
 
