@@ -26,6 +26,7 @@ from rest_framework.viewsets import (
     ReadOnlyModelViewSet,
 )
 
+from api.pagination import TruncatedListPagination
 from users.models import Subscription, User
 from foodgram import settings
 from foodgram.permission import OwnerOrReadOnly
@@ -101,7 +102,6 @@ class FavoriteViewSet(CreateModelMixin, DestroyModelMixin, GenericViewSet):
     serializer_class = FavoriteSerializer
     permission_classes = (IsAuthenticated,)
     throttle_scope = None
-    pagination_class = None
 
     def get_queryset(self):
         return self.request.user.favorited_user.all()
@@ -135,7 +135,6 @@ class ShoppingCartViewSet(CreateModelMixin, DestroyModelMixin, GenericViewSet):
     serializer_class = ShoppingCartSerializer
     permission_classes = (IsAuthenticated,)
     throttle_scope = None
-    pagination_class = None
 
     def get_queryset(self):
         return self.request.user.shoppingcart_user.all()
@@ -201,6 +200,10 @@ class ShoppingCartDownloadView(APIView):
 
         y = 800
         for i in range(0, len(shoppingcart_ingredients_list)):
+            if y < 60:
+                p.showPage()
+                p.setFont("FreeSans", 12)
+                y = 800
             if i == 0:
                 p.drawCentredString(
                     4.25 * inch, y, shoppingcart_ingredients_list[i]
@@ -211,7 +214,6 @@ class ShoppingCartDownloadView(APIView):
                     4.25 * inch, y, shoppingcart_ingredients_list[i]
                 )
                 y -= 60
-        p.showPage()
         p.save()
         buffer.seek(0)
         return FileResponse(
@@ -264,7 +266,6 @@ class SubscriptionViewSet(CreateModelMixin, DestroyModelMixin, GenericViewSet):
     serializer_class = SubscriptionSerializer
     permission_classes = (IsAuthenticated,)
     throttle_scope = None
-    pagination_class = None
 
     def get_queryset(self):
         return self.request.user.subscriber.all()
@@ -303,6 +304,7 @@ class SubscriptionsViewSet(ReadOnlyModelViewSet):
     queryset = Subscription.objects.all()
     serializer_class = SubscriptionsSerializer
     permission_classes = (IsAuthenticated,)
+    pagination_class = TruncatedListPagination
     throttle_scope = None
 
     def get_queryset(self):

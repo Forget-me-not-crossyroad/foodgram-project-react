@@ -69,6 +69,12 @@ class UserRecipeReadSerializer(serializers.ModelSerializer):
         depth = 1
 
     def get_is_subscribed(self, obj):
+        try:
+            user = self.context.get('request').user
+            if user.is_anonymous:
+                return False
+        except AttributeError:
+            pass
         return process_custom_context(
             instance=obj,
             modelfield_first='subscribed_to',
@@ -107,6 +113,12 @@ class RecipeReadSerializer(serializers.ModelSerializer):
         depth = 1
 
     def get_is_favorited(self, obj):
+        try:
+            user = self.context.get('request').user
+            if user.is_anonymous:
+                return False
+        except AttributeError:
+            pass
         return process_custom_context(
             instance=obj,
             modelfield_first='favorited_recipe',
@@ -117,6 +129,12 @@ class RecipeReadSerializer(serializers.ModelSerializer):
         )
 
     def get_is_in_shopping_cart(self, obj):
+        try:
+            user = self.context.get('request').user
+            if user.is_anonymous:
+                return False
+        except AttributeError:
+            pass
         return process_custom_context(
             instance=obj,
             modelfield_first='shoppingcart_recipe',
@@ -297,14 +315,25 @@ class UserReadSerializer(serializers.ModelSerializer):
 
 
 class UserSubscriptionSerializer(UserReadSerializer):
-    recipes = RecipeReadSerializer(many=True, read_only=True)
     recipes_count = serializers.SerializerMethodField()
+    recipes = serializers.SerializerMethodField()
 
     class Meta(UserReadSerializer.Meta):
         fields = UserReadSerializer.Meta.fields + ('recipes', 'recipes_count')
 
     def get_recipes_count(self, obj):
         return Recipe.objects.filter(author=obj.id).count()
+
+    def get_recipes(self, obj):
+        recipes = Recipe.objects.filter(author=obj.id)
+        recipes_limit = self.context.get('recipes_limit')
+        if recipes_limit:
+            recipes = recipes[:int(recipes_limit)]
+        serializer = RecipeReadSerializer(
+            recipes, many=True, read_only=True,
+            context=self.context
+        )
+        return serializer.data
 
 
 class MeReadSerializer(serializers.ModelSerializer):
@@ -403,6 +432,12 @@ class SubscriptionsSerializer(serializers.ModelSerializer):
         context = {}
         context['user_subscriber'] = user_subscriber
         context['is_list'] = True
+        try:
+            query_params_context = self.context.get('request').query_params
+            recipes_limit = query_params_context.get('recipes_limit')
+            context['recipes_limit'] = recipes_limit
+        except AttributeError:
+            pass
         serializer = UserSubscriptionSerializer(
             instance.subscribed_to, context=context
         )
