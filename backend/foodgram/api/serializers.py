@@ -6,7 +6,7 @@ from rest_framework.exceptions import ValidationError
 from rest_framework.fields import CurrentUserDefault
 from rest_framework.relations import PrimaryKeyRelatedField
 
-from api.exceptions import SubscriptionError
+from api.exceptions import SubscriptionError, IngredientRecipeCreateUpdateError, RecipeCreateUpdateError
 from api.utils import (
     process_custom_context,
     process_recipe_ingredients_data,
@@ -190,18 +190,34 @@ class RecipeCreateUpdateSerializer(serializers.ModelSerializer):
         return value
 
     def create(self, validated_data):
-        tags = validated_data.pop('tags')
-        recipe = Recipe.objects.create(**validated_data)
-        process_recipe_ingredients_data(self, recipe)
-        recipe.tags.set(tags)
-        return recipe
+        try:
+            tags = validated_data.pop('tags')
+            recipe = Recipe.objects.create(**validated_data)
+            process_recipe_ingredients_data(self, recipe)
+            recipe.tags.set(tags)
+            return recipe
+        except IntegrityError as e:
+            error_message = e.args[0]
+            if 'unique_recipe_ingredients' in error_message:
+                recipe.delete()
+                raise IngredientRecipeCreateUpdateError()
+            if 'unique_recipe' in error_message:
+                recipe.delete()
+                raise RecipeCreateUpdateError()
 
     def update(self, instance, validated_data):
-        instance.ingredients.clear()
-        process_recipe_ingredients_data(self, instance)
-        tags = validated_data.pop('tags')
-        instance.tags.set(tags)
-        return super().update(instance, validated_data)
+        try:
+            instance.ingredients.clear()
+            process_recipe_ingredients_data(self, instance)
+            tags = validated_data.pop('tags')
+            instance.tags.set(tags)
+            return super().update(instance, validated_data)
+        except IntegrityError as e:
+            error_message = e.args[0]
+            if 'unique_recipe_ingredients' in error_message:
+                raise IngredientRecipeCreateUpdateError()
+            if 'unique_recipe' in error_message:
+                raise RecipeCreateUpdateError()
 
 
 class FavoriteSerializer(serializers.ModelSerializer):
