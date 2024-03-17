@@ -162,7 +162,9 @@ class IngredientAmountRecognizeSerializer(serializers.ModelSerializer):
 
 class RecipeCreateUpdateSerializer(serializers.ModelSerializer):
     tags = PrimaryKeyRelatedField(many=True, queryset=Tag.objects.all())
-    ingredients = IngredientAmountRecognizeSerializer(many=True, write_only=True)
+    ingredients = IngredientAmountRecognizeSerializer(
+        many=True, write_only=True
+    )
     author = serializers.HiddenField(default=CurrentUserDefault())
     image = Base64ImageField()
 
@@ -205,7 +207,9 @@ class RecipeCreateUpdateSerializer(serializers.ModelSerializer):
                         {'ingredients': 'Ингридиенты дублируются'}
                     )
                 if int(item['amount']) <= 0:
-                    raise ValidationError({'amount': 'Выберите число большее 0'})
+                    raise ValidationError(
+                        {'amount': 'Выберите число большее 0'}
+                    )
                 ingredients_list.append(item)
             return value
         except ValidationError as e:
@@ -213,12 +217,14 @@ class RecipeCreateUpdateSerializer(serializers.ModelSerializer):
 
     def create(self, validated_data):
         tags = validated_data.pop('tags')
+        validated_data.pop('ingredients')
         recipe = Recipe.objects.create(**validated_data)
         process_recipe_ingredients_data(self, recipe)
         recipe.tags.set(tags)
         return recipe
 
     def update(self, instance, validated_data):
+        validated_data.pop('ingredients')
         instance.ingredients.clear()
         process_recipe_ingredients_data(self, instance)
         tags = validated_data.pop('tags')
@@ -350,7 +356,7 @@ class UserSubscriptionSerializer(UserReadSerializer):
         recipes = Recipe.objects.filter(author=obj.id)
         recipes_limit = self.context.get('recipes_limit')
         if recipes_limit:
-            recipes = recipes[:int(recipes_limit)]
+            recipes = recipes[: int(recipes_limit)]
         serializer = RecipeReadSerializer(
             recipes, many=True, read_only=True, context=self.context
         )
