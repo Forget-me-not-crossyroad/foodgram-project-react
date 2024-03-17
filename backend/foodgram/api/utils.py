@@ -39,8 +39,7 @@ def process_recipe_ingredients_data(self, instance):
     for ingredient in ingredients:
         ingredient_for_recipe_id = ingredient['id']
         amount_for_recipe = ingredient['amount']
-        if not amount_for_recipe.isdigit():
-            amount_for_recipe = re.sub("[^0-9]", "", amount_for_recipe)
+        amount_for_recipe = re.sub("[^0-9]", "", amount_for_recipe)
         recipes_ingredients_bulk_create.append(
             IngredientRecipe(
                 recipe=instance,

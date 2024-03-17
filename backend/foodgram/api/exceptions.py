@@ -20,13 +20,3 @@ class IngredientRecipeCreateUpdateError(APIException):
         'Удалите дублирующиеся ингредиенты'
     )
     default_code = 'recipe_create_update_error'
-
-
-class RecipeCreateUpdateError(APIException):
-    status_code = 400
-    default_detail = (
-        'Ошибка создания/редактирования рецепта:'
-        ' один и тот же автор не может создать два'
-        'рецепта с одинаковым названием'
-    )
-    default_code = 'recipe_create_update_error'

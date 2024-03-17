@@ -9,7 +9,6 @@ from rest_framework.relations import PrimaryKeyRelatedField
 from api.exceptions import (
     SubscriptionError,
     IngredientRecipeCreateUpdateError,
-    RecipeCreateUpdateError,
 )
 from api.utils import (
     process_custom_context,
@@ -77,16 +76,17 @@ class UserRecipeReadSerializer(serializers.ModelSerializer):
             user = self.context.get('request').user
             if user.is_anonymous:
                 return False
+            else:
+                raise AttributeError
         except AttributeError:
-            pass
-        return process_custom_context(
-            instance=obj,
-            modelfield_first='subscribed_to',
-            modelfield_second='subscriber',
-            self=self,
-            app_name='users',
-            model_name='Subscription',
-        )
+            return process_custom_context(
+                instance=obj,
+                modelfield_first='subscribed_to',
+                modelfield_second='subscriber',
+                self=self,
+                app_name='users',
+                model_name='Subscription',
+            )
 
 
 class RecipeReadSerializer(serializers.ModelSerializer):
@@ -121,36 +121,48 @@ class RecipeReadSerializer(serializers.ModelSerializer):
             user = self.context.get('request').user
             if user.is_anonymous:
                 return False
+            else:
+                raise AttributeError
         except AttributeError:
-            pass
-        return process_custom_context(
-            instance=obj,
-            modelfield_first='favorited_recipe',
-            modelfield_second='favorited_user',
-            self=self,
-            app_name='recipes',
-            model_name='Favorite',
-        )
+            return process_custom_context(
+                instance=obj,
+                modelfield_first='favorited_recipe',
+                modelfield_second='favorited_user',
+                self=self,
+                app_name='recipes',
+                model_name='Favorite',
+            )
 
     def get_is_in_shopping_cart(self, obj):
         try:
             user = self.context.get('request').user
             if user.is_anonymous:
                 return False
+            else:
+                raise AttributeError
         except AttributeError:
-            pass
-        return process_custom_context(
-            instance=obj,
-            modelfield_first='shoppingcart_recipe',
-            modelfield_second='shoppingcart_user',
-            self=self,
-            app_name='recipes',
-            model_name='ShoppingCart',
-        )
+            return process_custom_context(
+                instance=obj,
+                modelfield_first='shoppingcart_recipe',
+                modelfield_second='shoppingcart_user',
+                self=self,
+                app_name='recipes',
+                model_name='ShoppingCart',
+            )
+
+
+class IngredientAmountRecognizeSerializer(serializers.ModelSerializer):
+    id = serializers.PrimaryKeyRelatedField(queryset=Ingredient.objects.all())
+    amount = serializers.IntegerField()
+
+    class Meta:
+        model = IngredientRecipe
+        fields = ('id', 'amount')
 
 
 class RecipeCreateUpdateSerializer(serializers.ModelSerializer):
     tags = PrimaryKeyRelatedField(many=True, queryset=Tag.objects.all())
+    ingredients = IngredientAmountRecognizeSerializer(many=True, write_only=True)
     author = serializers.HiddenField(default=CurrentUserDefault())
     image = Base64ImageField()
 
@@ -170,58 +182,48 @@ class RecipeCreateUpdateSerializer(serializers.ModelSerializer):
         depth = 1
 
     def validate_tags(self, value):
-        if not value:
-            raise ValidationError({'tags': 'Отсутвует тег'})
-        tags_list = []
-        for tag in value:
-            if tag in tags_list:
-                raise ValidationError({'tags': 'Теги дублируются'})
-            tags_list.append(tag)
-        return value
+        try:
+            if not value:
+                raise ValidationError({'tags': 'Отсутвует тег'})
+            tags_list = []
+            for tag in value:
+                if tag in tags_list:
+                    raise ValidationError({'tags': 'Теги дублируются'})
+                tags_list.append(tag)
+            return value
+        except ValidationError as e:
+            raise IngredientRecipeCreateUpdateError(e)
 
     def validate_ingredients(self, value):
-        if not value:
-            raise ValidationError({'ingredients': 'Выберите ингредиенты'})
-        ingredients_list = []
-        for item in value:
-            if item in ingredients_list:
-                raise ValidationError(
-                    {'ingredients': 'Ингридиенты дублируются'}
-                )
-            if int(item['amount']) <= 0:
-                raise ValidationError({'amount': 'Выберите число большее 0'})
-            ingredients_list.append(item)
-        return value
+        try:
+            if not value:
+                raise ValidationError({'ingredients': 'Выберите ингредиенты'})
+            ingredients_list = []
+            for item in value:
+                if item in ingredients_list:
+                    raise ValidationError(
+                        {'ingredients': 'Ингридиенты дублируются'}
+                    )
+                if int(item['amount']) <= 0:
+                    raise ValidationError({'amount': 'Выберите число большее 0'})
+                ingredients_list.append(item)
+            return value
+        except ValidationError as e:
+            raise IngredientRecipeCreateUpdateError(e)
 
     def create(self, validated_data):
-        try:
-            tags = validated_data.pop('tags')
-            recipe = Recipe.objects.create(**validated_data)
-            process_recipe_ingredients_data(self, recipe)
-            recipe.tags.set(tags)
-            return recipe
-        except IntegrityError as e:
-            error_message = e.args[0]
-            if 'unique_recipe_ingredients' in error_message:
-                recipe.delete()
-                raise IngredientRecipeCreateUpdateError()
-            if 'unique_recipe' in error_message:
-                recipe.delete()
-                raise RecipeCreateUpdateError()
+        tags = validated_data.pop('tags')
+        recipe = Recipe.objects.create(**validated_data)
+        process_recipe_ingredients_data(self, recipe)
+        recipe.tags.set(tags)
+        return recipe
 
     def update(self, instance, validated_data):
-        try:
-            instance.ingredients.clear()
-            process_recipe_ingredients_data(self, instance)
-            tags = validated_data.pop('tags')
-            instance.tags.set(tags)
-            return super().update(instance, validated_data)
-        except IntegrityError as e:
-            error_message = e.args[0]
-            if 'unique_recipe_ingredients' in error_message:
-                raise IngredientRecipeCreateUpdateError()
-            if 'unique_recipe' in error_message:
-                raise RecipeCreateUpdateError()
+        instance.ingredients.clear()
+        process_recipe_ingredients_data(self, instance)
+        tags = validated_data.pop('tags')
+        instance.tags.set(tags)
+        return super().update(instance, validated_data)
 
 
 class FavoriteSerializer(serializers.ModelSerializer):
@@ -455,12 +457,15 @@ class SubscriptionsSerializer(serializers.ModelSerializer):
             query_params_context = self.context.get('request').query_params
             recipes_limit = query_params_context.get('recipes_limit')
             context['recipes_limit'] = recipes_limit
+            serializer = UserSubscriptionSerializer(
+                instance.subscribed_to, context=context
+            )
+            return serializer.data
         except AttributeError:
-            pass
-        serializer = UserSubscriptionSerializer(
-            instance.subscribed_to, context=context
-        )
-        return serializer.data
+            serializer = UserSubscriptionSerializer(
+                instance.subscribed_to, context=context
+            )
+            return serializer.data
 
     class Meta:
         model = Subscription
