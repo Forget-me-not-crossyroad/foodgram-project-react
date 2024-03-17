@@ -2,11 +2,15 @@ from django_filters import filters
 from django_filters.rest_framework import BooleanFilter, FilterSet
 from rest_framework.filters import SearchFilter
 
-from recipes.models import Recipe
+from recipes.models import Recipe, Tag
 
 
 class RecipeFilter(FilterSet):
-    tags = filters.CharFilter(field_name="tags__slug", method='filter_tags')
+    tags = filters.ModelMultipleChoiceFilter(
+        queryset=Tag.objects.all(),
+        field_name='tags__slug',
+        to_field_name='slug',
+    )
     author = filters.CharFilter(field_name="author", method='filter_author')
     is_favorited = BooleanFilter(method='get_favorited')
     is_in_shopping_cart = BooleanFilter(method='get_is_in_shopping_cart')
@@ -18,9 +22,6 @@ class RecipeFilter(FilterSet):
             'author',
             'is_favorited',
         ]
-
-    def filter_tags(self, queryset, slug, tags):
-        return queryset.filter(tags__slug__icontains=tags)
 
     def filter_author(self, queryset, id, author):
         return queryset.filter(author=author)
