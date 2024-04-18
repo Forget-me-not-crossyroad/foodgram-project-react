@@ -1,4 +1,4 @@
-![example branch parameter](https://github.com/Forget-me-not-crossyroad/foodgram-project-react/actions/workflows/main.yml/badge.svg?branch=main)
+![example branch parameter](https://github.com/Forget-me-not-crossyroad/foodgram-project-react/actions/workflows/main.yml/badge.svg?branch=master)
 
 # **_Foodgram_**
 Foodgram (Фудграм) — сайт, на котором пользователи могут публиковать рецепты, добавлять чужие рецепты в избранное и подписываться на публикации других авторов. Пользователям сайта также доступен сервис «Список покупок». Он позволяет создать список продуктов, которые нужно купить для приготовления выбранных блюд
